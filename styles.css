@@ -1791,3 +1791,287 @@ body[data-theme="light"] .legend-cell.trail { background: var(--cyan); box-shado
   .theme-btn { min-height: 22px; padding-top: 2px; padding-bottom: 2px; font-size: 7px; }
   .toggle-row { margin-top: 3px; font-size: 9px; }
 }
+
+/* Settings menu */
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-trigger {
+  display: none;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settings-trigger:hover,
+.settings-trigger[aria-expanded="true"] {
+  border-color: var(--cyan);
+  background: var(--surface-hover);
+  color: var(--cyan);
+}
+
+.settings-panel {
+  min-width: 0;
+  color: var(--text);
+}
+
+.settings-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.settings-head > span {
+  display: block;
+  min-width: 0;
+}
+
+.settings-head b,
+.settings-head small {
+  display: block;
+}
+
+.settings-head b {
+  color: var(--muted-strong);
+  font: 10px var(--mono);
+  letter-spacing: 0.13em;
+}
+
+.settings-head small {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font: 8px var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-close {
+  display: none;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settings-close:hover {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+
+.settings-fields {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.settings-field {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 7px;
+  color: var(--muted-strong);
+  font-size: 10px;
+}
+
+.settings-field > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-field select {
+  width: 100%;
+  min-width: 0;
+  height: 27px;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.settings-field select:hover,
+.settings-field select:focus {
+  border-color: var(--cyan);
+}
+
+.settings-field select option {
+  background: var(--panel-solid);
+  color: var(--text);
+}
+
+@media (min-width: 851px),
+       (min-width: 701px) and (max-width: 850px),
+       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
+  .controls {
+    grid-template-rows: auto auto auto auto;
+  }
+
+  .appearance-block {
+    grid-column: 1;
+    grid-row: 3 / span 2;
+  }
+
+  .randomize-btn {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .settings-panel {
+    display: block;
+    grid-column: 2;
+    grid-row: 4;
+    align-self: start;
+    padding: 9px 10px;
+  }
+
+  .settings-head {
+    margin-bottom: 6px;
+  }
+
+  .settings-head small {
+    display: none;
+  }
+
+  .settings-fields {
+    gap: 4px;
+  }
+
+  .settings-field {
+    gap: 5px;
+    font-size: 8px;
+  }
+
+  .settings-field select {
+    height: 24px;
+    padding: 0 3px;
+    font-size: 8px;
+  }
+}
+
+/* Short desktop rails keep the settings card useful without making the
+   appearance controls or randomize action disappear below the fold. */
+@media (min-width: 851px) and (max-height: 720px),
+       (min-width: 701px) and (max-width: 850px) and (max-height: 720px),
+       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) and (max-height: 720px) {
+  .settings-panel {
+    padding: 6px 8px;
+  }
+
+  .settings-head {
+    margin-bottom: 4px;
+  }
+
+  .settings-head b {
+    font-size: 9px;
+  }
+
+  .settings-fields {
+    gap: 3px;
+  }
+
+  .settings-field {
+    gap: 4px;
+    font-size: 7px;
+  }
+
+  .settings-field select {
+    height: 21px;
+    font-size: 7px;
+  }
+}
+
+/* On stacked layouts, the settings card becomes a compact gear menu in the
+   top-right corner so it does not add another long section to the page. */
+@media (max-width: 700px) and (orientation: portrait),
+       (max-width: 600px) {
+  .header-tools {
+    gap: 0;
+  }
+
+  .settings-trigger {
+    display: inline-flex;
+  }
+
+  .settings-panel {
+    position: fixed;
+    z-index: 20;
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    right: max(12px, calc(env(safe-area-inset-right, 0px) + 12px));
+    display: none;
+    width: min(320px, calc(100vw - 24px));
+    max-height: calc(100vh - 78px - env(safe-area-inset-top, 0px));
+    overflow: auto;
+    padding: 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 11px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+  }
+
+  .settings-panel.open {
+    display: block;
+  }
+
+  .settings-head {
+    margin-bottom: 12px;
+  }
+
+  .settings-head b {
+    font-size: 11px;
+  }
+
+  .settings-head small {
+    display: block;
+    font-size: 8px;
+  }
+
+  .settings-close {
+    display: block;
+  }
+
+  .settings-fields {
+    gap: 10px;
+  }
+
+  .settings-field {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .settings-field select {
+    height: 32px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+}

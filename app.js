@@ -15,6 +15,12 @@ const speedValue = document.getElementById('speedValue');
 const gridReadout = document.getElementById('gridReadout');
 const themeColorMeta = document.getElementById('themeColor');
 const faviconLink = document.getElementById('favicon');
+const gridSizeSelect = document.getElementById('gridSize');
+const patternSelect = document.getElementById('patternSelect');
+const boundaryModeSelect = document.getElementById('boundaryMode');
+const settingsTrigger = document.getElementById('settingsTrigger');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsClose = document.getElementById('settingsClose');
 
 let cols = 48;
 let rows = 30;
@@ -36,6 +42,8 @@ let history = [0];
 let effects = [];
 let effectFrame = 0;
 let trailEnabled = true;
+let gridSizeMode = 'responsive';
+let boundaryMode = 'wrap';
 let pixelRatio = 1;
 let chartPixelRatio = 1;
 
@@ -132,10 +140,28 @@ function resizeGrid(nextCols, nextRows) {
   updateGridReadout();
 }
 
+const fixedGridSizes = {
+  compact: [40, 20],
+  standard: [48, 30],
+  large: [72, 45],
+};
+
 function resizeGridForViewport(width, height) {
+  if (gridSizeMode !== 'responsive') return;
   const nextCols = Math.max(MIN_COLS, Math.min(MAX_COLS, Math.round(width / TARGET_CELL_SIZE)));
   const nextRows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, Math.round(height / TARGET_CELL_SIZE)));
   resizeGrid(nextCols, nextRows);
+}
+
+function setGridSize(mode) {
+  gridSizeMode = fixedGridSizes[mode] ? mode : 'responsive';
+  if (gridSizeMode === 'responsive') {
+    resizeGridForViewport(frame.clientWidth, frame.clientHeight);
+  } else {
+    const [nextCols, nextRows] = fixedGridSizes[gridSizeMode];
+    resizeGrid(nextCols, nextRows);
+  }
+  draw();
 }
 
 function currentTheme() {
@@ -334,6 +360,14 @@ function addEffect(x, y, type, time = performance.now()) {
   if (effects.length > 2400) effects.splice(0, effects.length - 2400);
 }
 
+function cellIsAlive(x, y) {
+  if (boundaryMode === 'wrap') {
+    return cells[(y + rows) % rows][(x + cols) % cols];
+  }
+  if (x < 0 || x >= cols || y < 0 || y >= rows) return 0;
+  return cells[y][x];
+}
+
 function evolve() {
   const next = makeGrid();
   const nextAges = makeGrid();
@@ -346,7 +380,7 @@ function evolve() {
       for (let dy = -1; dy <= 1; dy += 1) {
         for (let dx = -1; dx <= 1; dx += 1) {
           if (dx || dy) {
-            neighbours += cells[(y + dy + rows) % rows][(x + dx + cols) % cols] ? 1 : 0;
+            neighbours += cellIsAlive(x + dx, y + dy) ? 1 : 0;
           }
         }
       }
@@ -405,6 +439,7 @@ function selectPreset(name) {
   document.querySelectorAll('.preset').forEach((button) => {
     button.classList.toggle('active', button.dataset.pattern === name);
   });
+  if (patternSelect) patternSelect.value = name || '';
 }
 
 function place(pattern, offsetX, offsetY) {
@@ -527,6 +562,27 @@ document.querySelectorAll('.preset').forEach((button) => {
   button.addEventListener('click', () => loadPattern(button.dataset.pattern));
 });
 
+function setSettingsOpen(open) {
+  settingsPanel.classList.toggle('open', open);
+  settingsTrigger.setAttribute('aria-expanded', String(open));
+  if (open) settingsPanel.removeAttribute('aria-hidden');
+  else if (window.matchMedia('(max-width: 700px)').matches) settingsPanel.setAttribute('aria-hidden', 'true');
+  else settingsPanel.removeAttribute('aria-hidden');
+}
+
+settingsTrigger.addEventListener('click', () => setSettingsOpen(!settingsPanel.classList.contains('open')));
+settingsClose.addEventListener('click', () => setSettingsOpen(false));
+gridSizeSelect.addEventListener('change', (event) => setGridSize(event.target.value));
+patternSelect.addEventListener('change', (event) => loadPattern(event.target.value));
+boundaryModeSelect.addEventListener('change', (event) => {
+  boundaryMode = event.target.value === 'bounded' ? 'bounded' : 'wrap';
+});
+
+document.addEventListener('click', (event) => {
+  if (!settingsPanel.classList.contains('open') || !window.matchMedia('(max-width: 700px)').matches) return;
+  if (!settingsPanel.contains(event.target) && !settingsTrigger.contains(event.target)) setSettingsOpen(false);
+});
+
 document.getElementById('fitBtn').addEventListener('click', () => {
   zoom = 1;
   updateZoom();
@@ -581,6 +637,10 @@ function isTypingTarget(target) {
 }
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && settingsPanel.classList.contains('open')) {
+    setSettingsOpen(false);
+    return;
+  }
   if (isTypingTarget(event.target)) return;
   if (event.code === 'Space') {
     event.preventDefault();
@@ -595,5 +655,6 @@ document.addEventListener('keydown', (event) => {
 updateGridReadout();
 speedValue.textContent = `${speedRange.value} gen/s`;
 updateZoom();
+setSettingsOpen(false);
 applyTheme(currentTheme());
 setSize();
