@@ -14,6 +14,7 @@ const speedRange = document.getElementById('speedRange');
 const speedValue = document.getElementById('speedValue');
 const gridReadout = document.getElementById('gridReadout');
 const themeColorMeta = document.getElementById('themeColor');
+const faviconLink = document.getElementById('favicon');
 
 let cols = 48;
 let rows = 30;
@@ -63,6 +64,12 @@ const metaThemeColors = {
   dark: '#090d1b',
   light: '#edf4f1',
   contrast: '#000000',
+};
+
+const faviconByTheme = {
+  dark: 'favicon.svg',
+  light: 'favicon-light.svg',
+  contrast: 'favicon-contrast.svg',
 };
 
 const patterns = {
@@ -545,6 +552,7 @@ function applyTheme(theme) {
     button.classList.toggle('active', button.dataset.theme === theme);
   });
   themeColorMeta?.setAttribute('content', metaThemeColors[theme]);
+  faviconLink?.setAttribute('href', faviconByTheme[theme]);
   draw();
   drawChart();
   scheduleEffects();
