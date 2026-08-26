@@ -290,3 +290,17 @@ body[data-theme="contrast"]{--bg:#000;--panel:#080808;--line:#fff;--muted:#ddd;-
 @media (max-width:850px){.stats-grid{gap:clamp(5px,1.8vw,12px)}.stats-grid div+div{padding-left:clamp(5px,1.8vw,12px)}.stats-grid strong{font-size:clamp(13px,3.6vw,18px)}.stats-grid small{font-size:8px}.stats-block{padding-left:clamp(8px,2.2vw,15px);padding-right:clamp(8px,2.2vw,15px)}}
 @media (max-width:380px){.stats-grid{gap:4px}.stats-grid div+div{padding-left:5px}.stats-grid strong{font-size:13px}.stats-grid small{font-size:7px}.stats-block .section-head{letter-spacing:.07em}}
 @media (min-width:851px) and (max-width:1100px){.stats-grid strong{font-size:clamp(16px,2vw,21px)}}
+
+/* Keep the drawable board at the grid's native 48:30 aspect ratio. This prevents
+   rectangular cells and avoids the overly short canvas on portrait phones. */
+.canvas-frame{aspect-ratio:8 / 5}
+@media (max-width:850px) and (orientation:portrait){
+  .canvas-frame{height:auto;min-height:0;flex:0 0 auto;aspect-ratio:8 / 5}
+  .board-wrap{align-self:start;width:100%}
+}
+@media (max-width:850px) and (orientation:landscape){
+  .canvas-frame{height:auto;min-height:0;aspect-ratio:8 / 5;max-height:calc(100% - 42px);flex:1 1 auto}
+}
+@media (max-width:380px) and (orientation:portrait){
+  .canvas-frame{aspect-ratio:8 / 5;min-height:0}
+}
