@@ -2319,3 +2319,14 @@ body.settings-open {
     row-gap: 3px;
   }
 }
+
+/* Keep the desktop settings action visually attached to Randomize. Pull only
+   this following card up by the existing row gap so the other control groups
+   retain their breathing room. */
+@media (min-width: 851px),
+       (min-width: 701px) and (max-width: 850px),
+       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
+  .settings-desktop-trigger {
+    margin-top: -3px;
+  }
+}
