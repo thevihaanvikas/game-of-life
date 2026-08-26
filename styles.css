@@ -105,3 +105,16 @@
   .randomize-btn, .primary-btn, .step-btn { height:31px; }
   .page-footer { padding-top:6px; }
 }
+
+/* Final viewport contract: the experience owns the viewport rather than creating a page below it. */
+html, body { height:100%; }
+body { overflow:hidden; }
+.app-shell { height:100dvh; overflow:hidden; }
+.workspace { min-height:0; }
+.board-wrap { min-height:0; display:flex; flex-direction:column; }
+.canvas-frame { min-height:0; flex:1 1 auto; }
+.controls { min-height:0; }
+@media (max-width:850px) {
+  .app-shell { height:100dvh; }
+  .workspace { overflow:hidden; }
+}
