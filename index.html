@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Life / Conway's Game of Life</title>
-  <meta name="theme-color" content="#0b1021" />
+  <title>Conway's Game of Life</title>
+  <meta id="themeColor" name="theme-color" content="#090d1b" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <link id="favicon" rel="icon" type="image/svg+xml" href="favicon.svg" />
 </head>
-<body>
+<body data-theme="dark">
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div class="settings-backdrop" id="settingsBackdrop" aria-hidden="true"></div>
   <main class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Life home"><span class="brand-mark"><i></i><i></i><i></i><i></i></span><span>life<span class="brand-dot">.</span></span></a>
-      <div class="header-note"><span class="live-dot"></span><span>Cellular automata / 001</span></div>
+      <div class="header-tools">
+        <div class="header-note"><span class="live-dot"></span><span>Cellular automata / 001</span></div>
+        <button class="settings-trigger" id="settingsTrigger" type="button" aria-label="Open settings" aria-controls="settingsPanel" aria-expanded="false"><span aria-hidden="true">⚙</span></button>
+      </div>
     </header>
 
     <section class="hero">
@@ -29,7 +34,7 @@
     <section class="workspace">
       <div class="board-wrap glass">
         <div class="board-toolbar">
-          <div class="toolbar-label"><span class="status-dot" id="statusDot"></span><span id="statusText">Ready to evolve</span></div>
+          <div class="toolbar-label"><span class="status-dot" id="statusDot"></span><span id="statusText" aria-live="polite">Ready to evolve</span></div>
           <div class="toolbar-actions">
             <div class="zoom-control"><button id="zoomOut" aria-label="Zoom out">−</button><span id="zoomValue">100%</span><button id="zoomIn" aria-label="Zoom in">+</button></div>
             <button class="icon-btn" id="fitBtn" title="Fit grid to view" aria-label="Fit grid"><span class="fit-icon">⌗</span></button>
@@ -50,7 +55,7 @@
         <div class="control-block simulation-block">
           <div class="section-head"><span>SIMULATION</span><span class="kbd">SPACE</span></div>
           <div class="transport">
-            <button class="primary-btn" id="playBtn"><span class="play-icon">▶</span><span id="playLabel">Play</span></button>
+            <button class="primary-btn" id="playBtn" type="button" aria-pressed="false"><span class="play-icon">▶</span><span id="playLabel">Play</span></button>
             <button class="step-btn" id="stepBtn"><span>→</span> Step</button>
           </div>
           <div class="speed-row"><label for="speedRange">Speed</label><output id="speedValue">8 gen/s</output></div>
@@ -83,10 +88,51 @@
           <label class="toggle-row"><span>Trail mode <small>afterimages</small></span><input id="trailToggle" type="checkbox" checked /><i></i></label>
         </div>
         <button class="randomize-btn" id="randomizeBtn"><span>⤨</span> Randomize <kbd>R</kbd></button>
+
+        <button class="settings-desktop-trigger control-block" id="settingsDesktopTrigger" type="button" aria-label="Open settings" aria-controls="settingsPanel" aria-expanded="false">
+          <span class="settings-button-icon" aria-hidden="true">⚙</span>
+          <span class="settings-button-copy"><b>SETTINGS</b><small>World and startup options</small></span>
+          <span class="settings-button-arrow" aria-hidden="true">↗</span>
+        </button>
+
       </aside>
     </section>
     <footer class="page-footer"><span>RULES: BIRTH 3 · SURVIVAL 2—3</span><span>BUILT FOR CURIOSITY <b>♥</b></span></footer>
   </main>
+
+  <section class="settings-panel control-block" id="settingsPanel" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Settings">
+    <div class="settings-head">
+      <span><b>SETTINGS</b><small>World and startup options</small></span>
+      <button class="settings-close" id="settingsClose" type="button" aria-label="Close settings">×</button>
+    </div>
+    <div class="settings-fields">
+      <label class="settings-field" for="gridSize">
+        <span>Grid size</span>
+        <select id="gridSize">
+          <option value="responsive">Responsive</option>
+          <option value="compact">Compact · 40 × 20</option>
+          <option value="standard">Standard · 48 × 30</option>
+          <option value="large">Large · 72 × 45</option>
+        </select>
+      </label>
+      <label class="settings-field" for="patternSelect">
+        <span>Built-in pattern</span>
+        <select id="patternSelect">
+          <option value="blank">Blank canvas</option>
+          <option value="glider">Glider</option>
+          <option value="gun">Gosper gun</option>
+          <option value="random">Random field</option>
+        </select>
+      </label>
+      <label class="settings-field" for="boundaryMode">
+        <span>Edge behavior</span>
+        <select id="boundaryMode">
+          <option value="wrap">Wrap around</option>
+          <option value="bounded">Bounded edges</option>
+        </select>
+      </label>
+    </div>
+  </section>
   <script src="app.js"></script>
 </body>
 </html>
