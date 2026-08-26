@@ -249,3 +249,23 @@ body[data-theme="contrast"]{--bg:#000;--panel:#080808;--line:#fff;--muted:#ddd;-
 @media (max-width:520px){.appearance-block{padding:7px 8px}.theme-btn{font-size:8px}.toggle-row{font-size:10px}}
 @media (max-height:800px) and (min-width:851px){.population-chart{margin-top:7px}.population-chart canvas{height:36px}.appearance-block{padding:7px 12px}.toggle-row{margin-top:6px}}
 .legend-cell.trail{background:var(--cyan);opacity:.3;box-shadow:0 0 7px var(--cyan)}
+
+/* Responsive layout contract: the shell owns the viewport at every size. */
+.app-shell{display:flex;flex-direction:column;min-width:0}
+.workspace{flex:1 1 auto;min-height:0;min-width:0}
+.board-wrap,.controls{min-width:0}
+.controls{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+@media (min-width:1101px){.workspace{grid-template-columns:minmax(0,1fr) minmax(280px,335px)}}
+@media (min-width:851px) and (max-width:1100px){.app-shell{padding-left:24px;padding-right:24px}.workspace{grid-template-columns:minmax(0,1fr) 300px}.hero{padding-left:0;padding-right:0}.hero h1{font-size:clamp(48px,6vw,72px)}}
+@media (max-width:850px){
+  .app-shell{overflow:hidden}.topbar{flex:none}.hero{flex:none}.workspace{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;overflow:hidden}.board-wrap{min-height:0}.controls{overflow-y:auto;overflow-x:hidden;max-height:42vh;align-content:start}.canvas-frame{min-height:0}
+}
+@media (max-width:600px){
+  .app-shell{padding-left:10px;padding-right:10px}.brand{font-size:20px}.brand-mark{width:21px;height:21px}.hero{padding-top:10px;padding-bottom:8px}.hero h1{font-size:clamp(35px,11vw,48px)}.intro{font-size:10px}.workspace{grid-template-rows:minmax(0,1fr) auto;gap:7px}.board-wrap{padding:8px}.board-toolbar,.board-footer{height:19px}.canvas-frame{margin:5px 0;min-height:0}.controls{max-height:45vh}.legend,.size-readout{font-size:8px}.toolbar-actions{gap:1px}
+}
+@media (max-width:850px) and (orientation:landscape){
+  .hero{padding:6px 0;display:flex;align-items:end}.hero h1{font-size:38px}.intro{margin:0}.workspace{grid-template-columns:minmax(0,1fr) 285px;grid-template-rows:minmax(0,1fr);gap:10px}.controls{max-height:none}.page-footer{display:none}.canvas-frame{min-height:0}
+}
+@media (max-width:380px){
+  .app-shell{padding-left:7px;padding-right:7px}.hero h1{font-size:34px}.intro{font-size:9px}.controls{max-height:48vh}.theme-options{gap:2px}.theme-btn{font-size:7px}.section-head{font-size:9px}.preset b{font-size:10px}.randomize-btn{padding-left:9px}
+}
