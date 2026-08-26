@@ -17,6 +17,11 @@ const themeColorMeta = document.getElementById('themeColor');
 
 let cols = 48;
 let rows = 30;
+const TARGET_CELL_SIZE = 14;
+const MIN_COLS = 40;
+const MIN_ROWS = 20;
+const MAX_COLS = 160;
+const MAX_ROWS = 100;
 let cells = makeGrid();
 let ages = makeGrid();
 let trails = makeTrailGrid();
@@ -83,6 +88,49 @@ function makeTrailGrid() {
   return Array.from({ length: rows }, () => new Float32Array(cols));
 }
 
+function updateGridReadout() {
+  gridReadout.textContent = `${cols} × ${rows}`;
+}
+
+function resizeGrid(nextCols, nextRows) {
+  if (nextCols === cols && nextRows === rows) return;
+
+  const previousCols = cols;
+  const previousRows = rows;
+  const previousCells = cells;
+  const previousAges = ages;
+  const previousTrails = trails;
+  const nextCells = Array.from({ length: nextRows }, () => new Uint16Array(nextCols));
+  const nextAges = Array.from({ length: nextRows }, () => new Uint16Array(nextCols));
+  const nextTrails = Array.from({ length: nextRows }, () => new Float32Array(nextCols));
+
+  // Resize around the centre of the world. Existing cells are mapped by their
+  // relative position so resizing the window does not erase a hand-painted
+  // pattern or make it jump to a corner.
+  for (let y = 0; y < previousRows; y += 1) {
+    for (let x = 0; x < previousCols; x += 1) {
+      const targetX = Math.min(nextCols - 1, Math.round(x * (nextCols - 1) / Math.max(1, previousCols - 1)));
+      const targetY = Math.min(nextRows - 1, Math.round(y * (nextRows - 1) / Math.max(1, previousRows - 1)));
+      nextCells[targetY][targetX] = Math.max(nextCells[targetY][targetX], previousCells[y][x]);
+      nextAges[targetY][targetX] = Math.max(nextAges[targetY][targetX], previousAges[y][x]);
+      nextTrails[targetY][targetX] = Math.max(nextTrails[targetY][targetX], previousTrails[y][x]);
+    }
+  }
+
+  cols = nextCols;
+  rows = nextRows;
+  cells = nextCells;
+  ages = nextAges;
+  trails = nextTrails;
+  updateGridReadout();
+}
+
+function resizeGridForViewport(width, height) {
+  const nextCols = Math.max(MIN_COLS, Math.min(MAX_COLS, Math.round(width / TARGET_CELL_SIZE)));
+  const nextRows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, Math.round(height / TARGET_CELL_SIZE)));
+  resizeGrid(nextCols, nextRows);
+}
+
 function currentTheme() {
   return document.body.dataset.theme || 'dark';
 }
@@ -117,6 +165,7 @@ function setSize() {
 
   if (boardWidth > 0 && boardHeight > 0) {
     pixelRatio = resizeCanvas(canvas, ctx, boardWidth, boardHeight);
+    resizeGridForViewport(boardWidth, boardHeight);
   }
 
   if (chart && chartCtx) {
@@ -156,13 +205,12 @@ function draw(now = performance.now()) {
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
 
-  const cellSize = Math.min(width / cols, height / rows) * zoom;
-  const gridWidth = cellSize * cols;
-  const gridHeight = cellSize * rows;
+  const gridWidth = width * zoom;
+  const gridHeight = height * zoom;
   const left = (width - gridWidth) / 2;
   const top = (height - gridHeight) / 2;
-  const cellWidth = cellSize;
-  const cellHeight = cellSize;
+  const cellWidth = gridWidth / cols;
+  const cellHeight = gridHeight / rows;
 
   ctx.strokeStyle = grid;
   ctx.lineWidth = 1 / pixelRatio;
@@ -405,14 +453,11 @@ function cellFromEvent(event) {
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return [-1, -1];
 
-  const cellSize = Math.min(rect.width / cols, rect.height / rows) * zoom;
-  const gridWidth = cellSize * cols;
-  const gridHeight = cellSize * rows;
-  const left = (rect.width - gridWidth) / 2;
-  const top = (rect.height - gridHeight) / 2;
-  const gridX = (event.clientX - rect.left - left) / cellSize;
-  const gridY = (event.clientY - rect.top - top) / cellSize;
-  return [Math.floor(gridX), Math.floor(gridY)];
+  const normalizedX = (event.clientX - rect.left) / rect.width;
+  const normalizedY = (event.clientY - rect.top) / rect.height;
+  const gridX = (normalizedX - (1 - zoom) / 2) / zoom;
+  const gridY = (normalizedY - (1 - zoom) / 2) / zoom;
+  return [Math.floor(gridX * cols), Math.floor(gridY * rows)];
 }
 
 function finishDrawing(event) {
@@ -539,7 +584,7 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-gridReadout.textContent = `${cols} × ${rows}`;
+updateGridReadout();
 speedValue.textContent = `${speedRange.value} gen/s`;
 updateZoom();
 applyTheme(currentTheme());

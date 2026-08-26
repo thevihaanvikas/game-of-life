@@ -915,7 +915,8 @@ input[type="range"] {
   font-size: 13px;
 }
 
-/* Keep the board's cells square: the 48 by 30 grid has an 8:5 aspect ratio. */
+/* At desktop widths the board fills the available workspace. The renderer adapts
+   the grid dimensions to the frame so the drawable area is never letterboxed. */
 @media (min-width: 851px) and (max-width: 1100px) {
   .app-shell {
     padding-right: 24px;
