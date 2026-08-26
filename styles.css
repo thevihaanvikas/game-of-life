@@ -2284,3 +2284,38 @@ body.settings-open {
     display: none;
   }
 }
+
+/* Header affordance switch: stacked layouts get the gear, wider layouts keep
+   the cellular-automata status line. Never render both in the same compact
+   header, where the note can wrap underneath the icon. */
+@media (max-width: 700px) and (orientation: portrait),
+       (max-width: 600px) {
+  .header-note {
+    display: none;
+  }
+
+  .settings-trigger {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 701px),
+       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
+  .header-note {
+    display: flex;
+  }
+
+  .settings-trigger {
+    display: none;
+  }
+}
+
+/* The desktop settings trigger follows Randomize in the right rail. Use a
+   tighter row gap there so the two related actions read as one group. */
+@media (min-width: 851px),
+       (min-width: 701px) and (max-width: 850px),
+       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
+  .controls {
+    row-gap: 3px;
+  }
+}
