@@ -235,3 +235,103 @@ body { overflow:hidden; }
 @media (max-width:520px) and (max-height:620px) and (orientation:portrait) {
   .canvas-frame { height:clamp(112px, calc(var(--viewport-height, 100vh) - 615px), 120px); }
 }
+
+/* Visualization and accessibility additions */
+:root{--chart:#60d7ed}
+body[data-theme="light"]{--bg:#edf3f0;--panel:rgba(255,255,255,.82);--line:rgba(32,62,58,.18);--muted:#536b69;--text:#142b2a;--lime:#27734a;--cyan:#16718a;--chart:#16718a}
+body[data-theme="light"] .ambient{opacity:.1}body[data-theme="light"] .canvas-frame{border-color:rgba(32,62,58,.2)}
+body[data-theme="contrast"]{--bg:#000;--panel:#080808;--line:#fff;--muted:#ddd;--text:#fff;--lime:#ffff00;--cyan:#00ffff;--chart:#00ffff}body[data-theme="contrast"] .ambient{display:none}body[data-theme="contrast"] .glass,body[data-theme="contrast"] .control-block{box-shadow:none}body[data-theme="contrast"] .canvas-frame{background:#000;border-color:#fff}
+.population-chart{display:none;margin-top:12px}.population-chart span{display:block;color:var(--muted);font:8px var(--mono);letter-spacing:.08em;margin-bottom:4px}.population-chart canvas{width:100%;height:48px;cursor:default;image-rendering:auto}
+.theme-options{display:flex;gap:4px}.theme-btn{flex:1;min-width:0;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--muted);padding:7px 3px;font:9px var(--sans);cursor:pointer}.theme-btn:hover,.theme-btn.active{color:var(--text);border-color:var(--cyan);background:rgba(96,215,237,.1)}
+.toggle-row{margin-top:10px;display:flex;align-items:center;justify-content:space-between;color:var(--text);font-size:11px;cursor:pointer}.toggle-row small{display:block;color:var(--muted);font:8px var(--mono);margin-top:2px}.toggle-row input{position:absolute;opacity:0}.toggle-row i{width:28px;height:15px;border-radius:20px;background:var(--line);position:relative;transition:.2s}.toggle-row i:after{content:"";position:absolute;width:11px;height:11px;top:2px;left:2px;border-radius:50%;background:var(--muted);transition:.2s}.toggle-row input:checked+i{background:var(--cyan)}.toggle-row input:checked+i:after{left:15px;background:var(--bg)}
+@media (min-width:851px){.population-chart{display:block}.appearance-block{padding:11px 17px}.appearance-block .section-head{margin-bottom:9px}}
+@media (max-width:850px){.population-chart{display:none}.appearance-block{grid-column:1 / -1;grid-row:4;padding:9px 10px}.appearance-block .section-head{margin-bottom:7px}.theme-btn{padding:5px 2px}.toggle-row{margin-top:7px}.randomize-btn{grid-row:5}}
+@media (max-width:520px){.appearance-block{padding:7px 8px}.theme-btn{font-size:8px}.toggle-row{font-size:10px}}
+@media (max-height:800px) and (min-width:851px){.population-chart{margin-top:7px}.population-chart canvas{height:36px}.appearance-block{padding:7px 12px}.toggle-row{margin-top:6px}}
+.legend-cell.trail{background:var(--cyan);opacity:.3;box-shadow:0 0 7px var(--cyan)}
+
+/* Responsive layout contract: the shell owns the viewport at every size. */
+.app-shell{display:flex;flex-direction:column;min-width:0}
+.workspace{flex:1 1 auto;min-height:0;min-width:0}
+.board-wrap,.controls{min-width:0}
+.controls{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+@media (min-width:1101px){.workspace{grid-template-columns:minmax(0,1fr) minmax(280px,335px)}}
+@media (min-width:851px) and (max-width:1100px){.app-shell{padding-left:24px;padding-right:24px}.workspace{grid-template-columns:minmax(0,1fr) 300px}.hero{padding-left:0;padding-right:0}.hero h1{font-size:clamp(48px,6vw,72px)}}
+@media (max-width:850px){
+  .app-shell{overflow:hidden}.topbar{flex:none}.hero{flex:none}.workspace{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;overflow:hidden}.board-wrap{min-height:0}.controls{overflow-y:auto;overflow-x:hidden;max-height:42vh;align-content:start}.canvas-frame{min-height:0}
+}
+@media (max-width:600px){
+  .app-shell{padding-left:10px;padding-right:10px}.brand{font-size:20px}.brand-mark{width:21px;height:21px}.hero{padding-top:10px;padding-bottom:8px}.hero h1{font-size:clamp(35px,11vw,48px)}.intro{font-size:10px}.workspace{grid-template-rows:minmax(0,1fr) auto;gap:7px}.board-wrap{padding:8px}.board-toolbar,.board-footer{height:19px}.canvas-frame{margin:5px 0;min-height:0}.controls{max-height:45vh}.legend,.size-readout{font-size:8px}.toolbar-actions{gap:1px}
+}
+@media (max-width:850px) and (orientation:landscape){
+  .hero{padding:6px 0;display:flex;align-items:end}.hero h1{font-size:38px}.intro{margin:0}.workspace{grid-template-columns:minmax(0,1fr) 285px;grid-template-rows:minmax(0,1fr);gap:10px}.controls{max-height:none}.page-footer{display:none}.canvas-frame{min-height:0}
+}
+@media (max-width:380px){
+  .app-shell{padding-left:7px;padding-right:7px}.hero h1{font-size:34px}.intro{font-size:9px}.controls{max-height:48vh}.theme-options{gap:2px}.theme-btn{font-size:7px}.section-head{font-size:9px}.preset b{font-size:10px}.randomize-btn{padding-left:9px}
+}
+
+/* Simulation controls: use stable grid tracks so the block never compresses unpredictably. */
+.simulation-block{min-width:0}.simulation-block .transport{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.simulation-block .primary-btn,.simulation-block .step-btn{min-width:0;white-space:nowrap}.simulation-block .speed-row{gap:8px}.simulation-block input[type=range]{display:block;min-width:0}
+@media (max-width:850px){
+  .controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .simulation-block{grid-column:1;grid-row:1;min-width:0}
+  .stats-block{grid-column:2;grid-row:1;min-width:0}
+  .presets-block{grid-column:1 / -1;grid-row:2}
+  .appearance-block{grid-column:1 / -1;grid-row:3}
+  .randomize-btn{grid-column:1 / -1;grid-row:4}
+}
+@media (max-width:430px){
+  .simulation-block .section-head{letter-spacing:.08em}.simulation-block .transport{grid-template-columns:1fr}.simulation-block .step-btn{display:none}.simulation-block .speed-row{margin-top:8px}.simulation-block .speed-row label{font-size:10px}.simulation-block .speed-row output{font-size:9px}
+}
+@media (max-width:850px) and (orientation:landscape){.simulation-block .transport{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.simulation-block .step-btn{display:block}}
+
+/* Final scaling pass: stats and compact controls must shrink inside their grid tracks. */
+.controls>*{min-width:0}.stats-block{min-width:0;overflow:hidden}.stats-grid{min-width:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(6px,1.2vw,18px)}.stats-grid>div{min-width:0;overflow:hidden}.stats-grid div+div{padding-left:clamp(6px,1.2vw,18px)}.stats-grid strong{display:block;min-width:0;overflow:hidden;text-overflow:clip;white-space:nowrap;font-size:clamp(14px,2.1vw,22px);letter-spacing:-.06em}.stats-grid small{font-size:clamp(7px,.7vw,9px);white-space:nowrap}.stats-block .section-head{min-width:0}.stats-block .section-head>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:850px){.stats-grid{gap:clamp(5px,1.8vw,12px)}.stats-grid div+div{padding-left:clamp(5px,1.8vw,12px)}.stats-grid strong{font-size:clamp(13px,3.6vw,18px)}.stats-grid small{font-size:8px}.stats-block{padding-left:clamp(8px,2.2vw,15px);padding-right:clamp(8px,2.2vw,15px)}}
+@media (max-width:380px){.stats-grid{gap:4px}.stats-grid div+div{padding-left:5px}.stats-grid strong{font-size:13px}.stats-grid small{font-size:7px}.stats-block .section-head{letter-spacing:.07em}}
+@media (min-width:851px) and (max-width:1100px){.stats-grid strong{font-size:clamp(16px,2vw,21px)}}
+
+/* Keep the drawable board at the grid's native 48:30 aspect ratio. This prevents
+   rectangular cells and avoids the overly short canvas on portrait phones. */
+.canvas-frame{aspect-ratio:8 / 5}
+@media (max-width:850px) and (orientation:portrait){
+  .canvas-frame{height:auto;min-height:0;flex:0 0 auto;aspect-ratio:8 / 5}
+  .board-wrap{align-self:start;width:100%}
+}
+@media (max-width:850px) and (orientation:landscape){
+  .canvas-frame{height:auto;min-height:0;aspect-ratio:8 / 5;max-height:calc(100% - 42px);flex:1 1 auto}
+}
+@media (max-width:380px) and (orientation:portrait){
+  .canvas-frame{aspect-ratio:8 / 5;min-height:0}
+}
+
+/* Small-screen fallback: let compact phones and short browser windows scroll instead
+   of clipping the lower controls. Standard desktop viewports keep the fixed composition. */
+@media (max-width:850px), (min-width:851px) and (max-height:760px){
+  html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+  .app-shell{height:auto;min-height:var(--viewport-height,100vh);overflow:visible}
+  .workspace{overflow:visible}
+  .controls{max-height:none;overflow:visible}
+}
+@media (max-width:850px){
+  .workspace{grid-template-rows:auto auto}
+  .board-wrap{align-self:stretch}
+}
+@media (min-width:851px) and (max-height:760px){
+  .workspace{overflow:visible}
+  .board-wrap{min-height:360px}
+}
+
+/* Light theme contrast fixes for surfaces and legacy dark-only component colors. */
+body[data-theme="light"] .control-block{background:rgba(255,255,255,.78);box-shadow:0 12px 30px rgba(30,67,60,.08),inset 0 1px rgba(255,255,255,.9)}
+body[data-theme="light"] .step-btn{background:rgba(20,55,50,.06);color:#173d3a;border-color:rgba(32,62,58,.22)}
+body[data-theme="light"] .step-btn:hover,body[data-theme="light"] .randomize-btn:hover{background:rgba(20,55,50,.1)}
+body[data-theme="light"] .stats-grid strong{color:#173d3a}body[data-theme="light"] .stats-grid small{color:#4f6865}
+body[data-theme="light"] .section-head{color:#4f6865}body[data-theme="light"] .toolbar-label{color:#536b69}
+body[data-theme="light"] .zoom-control,body[data-theme="light"] .zoom-control button,body[data-theme="light"] .icon-btn{color:#41615e}
+body[data-theme="light"] .zoom-control button:hover,body[data-theme="light"] .icon-btn:hover{color:#173d3a;background:rgba(20,55,50,.06)}
+body[data-theme="light"] .preset small{color:#4f6865}body[data-theme="light"] .arrow{color:#41615e}
+body[data-theme="light"] .pattern-icon{background-color:#e1ebe7;background-image:radial-gradient(#5b827a 1.5px,transparent 1.5px)}body[data-theme="light"] .gun-pattern{background-image:radial-gradient(var(--cyan) 1.5px,transparent 1.5px)}
+body[data-theme="light"] .empty-hint{color:#60807a}body[data-theme="light"] .empty-hint strong{color:#315955}body[data-theme="light"] .empty-hint small{color:#60807a}
+body[data-theme="light"] .randomize-btn{background:rgba(22,113,138,.08);border-color:rgba(22,113,138,.3)}body[data-theme="light"] .randomize-btn kbd{color:#536b69}
+body[data-theme="light"] .page-footer{color:#536b69}
