@@ -284,3 +284,9 @@ body[data-theme="contrast"]{--bg:#000;--panel:#080808;--line:#fff;--muted:#ddd;-
   .simulation-block .section-head{letter-spacing:.08em}.simulation-block .transport{grid-template-columns:1fr}.simulation-block .step-btn{display:none}.simulation-block .speed-row{margin-top:8px}.simulation-block .speed-row label{font-size:10px}.simulation-block .speed-row output{font-size:9px}
 }
 @media (max-width:850px) and (orientation:landscape){.simulation-block .transport{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.simulation-block .step-btn{display:block}}
+
+/* Final scaling pass: stats and compact controls must shrink inside their grid tracks. */
+.controls>*{min-width:0}.stats-block{min-width:0;overflow:hidden}.stats-grid{min-width:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(6px,1.2vw,18px)}.stats-grid>div{min-width:0;overflow:hidden}.stats-grid div+div{padding-left:clamp(6px,1.2vw,18px)}.stats-grid strong{display:block;min-width:0;overflow:hidden;text-overflow:clip;white-space:nowrap;font-size:clamp(14px,2.1vw,22px);letter-spacing:-.06em}.stats-grid small{font-size:clamp(7px,.7vw,9px);white-space:nowrap}.stats-block .section-head{min-width:0}.stats-block .section-head>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:850px){.stats-grid{gap:clamp(5px,1.8vw,12px)}.stats-grid div+div{padding-left:clamp(5px,1.8vw,12px)}.stats-grid strong{font-size:clamp(13px,3.6vw,18px)}.stats-grid small{font-size:8px}.stats-block{padding-left:clamp(8px,2.2vw,15px);padding-right:clamp(8px,2.2vw,15px)}}
+@media (max-width:380px){.stats-grid{gap:4px}.stats-grid div+div{padding-left:5px}.stats-grid strong{font-size:13px}.stats-grid small{font-size:7px}.stats-block .section-head{letter-spacing:.07em}}
+@media (min-width:851px) and (max-width:1100px){.stats-grid strong{font-size:clamp(16px,2vw,21px)}}
