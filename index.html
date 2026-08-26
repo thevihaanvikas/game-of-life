@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Life / Conway's Game of Life</title>
-  <meta name="theme-color" content="#0b1021" />
+  <meta id="themeColor" name="theme-color" content="#090d1b" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-theme="dark">
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <main class="app-shell">
     <header class="topbar">
@@ -29,7 +29,7 @@
     <section class="workspace">
       <div class="board-wrap glass">
         <div class="board-toolbar">
-          <div class="toolbar-label"><span class="status-dot" id="statusDot"></span><span id="statusText">Ready to evolve</span></div>
+          <div class="toolbar-label"><span class="status-dot" id="statusDot"></span><span id="statusText" aria-live="polite">Ready to evolve</span></div>
           <div class="toolbar-actions">
             <div class="zoom-control"><button id="zoomOut" aria-label="Zoom out">−</button><span id="zoomValue">100%</span><button id="zoomIn" aria-label="Zoom in">+</button></div>
             <button class="icon-btn" id="fitBtn" title="Fit grid to view" aria-label="Fit grid"><span class="fit-icon">⌗</span></button>
@@ -50,7 +50,7 @@
         <div class="control-block simulation-block">
           <div class="section-head"><span>SIMULATION</span><span class="kbd">SPACE</span></div>
           <div class="transport">
-            <button class="primary-btn" id="playBtn"><span class="play-icon">▶</span><span id="playLabel">Play</span></button>
+            <button class="primary-btn" id="playBtn" type="button" aria-pressed="false"><span class="play-icon">▶</span><span id="playLabel">Play</span></button>
             <button class="step-btn" id="stepBtn"><span>→</span> Step</button>
           </div>
           <div class="speed-row"><label for="speedRange">Speed</label><output id="speedValue">8 gen/s</output></div>
