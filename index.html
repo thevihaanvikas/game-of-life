@@ -41,7 +41,7 @@
           <div class="empty-hint" id="emptyHint"><span>✦</span><strong>Paint your first cell</strong><small>Click or drag across the grid</small></div>
         </div>
         <div class="board-footer">
-          <div class="legend"><span class="legend-cell on"></span> Alive <span class="legend-cell off"></span> Empty</div>
+          <div class="legend"><span class="legend-cell on"></span> Alive / age <span class="legend-cell trail"></span> Trail</div>
           <div class="size-readout"><span id="gridReadout">48 × 30</span><span class="sep">·</span><span>drag to paint</span></div>
         </div>
       </div>
@@ -70,8 +70,18 @@
         <div class="control-block stats-block">
           <div class="section-head"><span>LIVE STATS</span><span class="pulse-line">⌁</span></div>
           <div class="stats-grid"><div><small>GENERATION</small><strong id="generation">00000</strong></div><div><small>POPULATION</small><strong id="population">0000</strong></div></div>
+          <div class="population-chart" aria-label="Population over generations"><span>POPULATION / GENERATION</span><canvas id="populationChart"></canvas></div>
         </div>
 
+        <div class="control-block appearance-block">
+          <div class="section-head"><span>APPEARANCE</span><span class="sparkle">◐</span></div>
+          <div class="theme-options" role="group" aria-label="Color theme">
+            <button class="theme-btn active" data-theme="dark">Dark glass</button>
+            <button class="theme-btn" data-theme="light">Light</button>
+            <button class="theme-btn" data-theme="contrast">High contrast</button>
+          </div>
+          <label class="toggle-row"><span>Trail mode <small>afterimages</small></span><input id="trailToggle" type="checkbox" checked /><i></i></label>
+        </div>
         <button class="randomize-btn" id="randomizeBtn"><span>⤨</span> Randomize <kbd>R</kbd></button>
       </aside>
     </section>
