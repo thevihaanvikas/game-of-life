@@ -181,3 +181,12 @@ body { overflow:hidden; }
   .stats-grid strong { font-size:14px; }
   .page-footer { display:none; }
 }
+
+/* Mobile control hierarchy: surface the stats beside simulation, before the pattern palette. */
+@media (max-width:850px) {
+  .controls { grid-template-columns:1fr 1fr; }
+  .simulation-block { grid-column:1; grid-row:1; }
+  .stats-block { grid-column:2; grid-row:1; }
+  .presets-block { grid-column:1 / -1; grid-row:2; }
+  .randomize-btn { grid-column:1 / -1; grid-row:3; }
+}
