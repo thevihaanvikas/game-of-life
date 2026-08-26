@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Life / Conway's Game of Life</title>
+  <meta name="theme-color" content="#0b1021" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Life home"><span class="brand-mark"><i></i><i></i><i></i><i></i></span><span>life<span class="brand-dot">.</span></span></a>
+      <div class="header-note"><span class="live-dot"></span><span>Cellular automata / 001</span></div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">CONWAY'S GAME OF LIFE</p>
+        <h1>Give life<br><em>room to grow.</em></h1>
+      </div>
+      <p class="intro">Paint a world. Set it in motion.<br>Watch simple rules make something alive.</p>
+    </section>
+
+    <section class="workspace">
+      <div class="board-wrap glass">
+        <div class="board-toolbar">
+          <div class="toolbar-label"><span class="status-dot" id="statusDot"></span><span id="statusText">Ready to evolve</span></div>
+          <div class="toolbar-actions">
+            <div class="zoom-control"><button id="zoomOut" aria-label="Zoom out">−</button><span id="zoomValue">100%</span><button id="zoomIn" aria-label="Zoom in">+</button></div>
+            <button class="icon-btn" id="fitBtn" title="Fit grid to view" aria-label="Fit grid"><span class="fit-icon">⌗</span></button>
+            <button class="icon-btn" id="clearBtn" title="Clear grid" aria-label="Clear grid">⌫</button>
+          </div>
+        </div>
+        <div class="canvas-frame" id="canvasFrame">
+          <canvas id="lifeCanvas" aria-label="Interactive Game of Life grid"></canvas>
+          <div class="empty-hint" id="emptyHint"><span>✦</span><strong>Paint your first cell</strong><small>Click or drag across the grid</small></div>
+        </div>
+        <div class="board-footer">
+          <div class="legend"><span class="legend-cell on"></span> Alive <span class="legend-cell off"></span> Empty</div>
+          <div class="size-readout"><span id="gridReadout">48 × 30</span><span class="sep">·</span><span>drag to paint</span></div>
+        </div>
+      </div>
+
+      <aside class="controls">
+        <div class="control-block simulation-block">
+          <div class="section-head"><span>SIMULATION</span><span class="kbd">SPACE</span></div>
+          <div class="transport">
+            <button class="primary-btn" id="playBtn"><span class="play-icon">▶</span><span id="playLabel">Play</span></button>
+            <button class="step-btn" id="stepBtn"><span>→</span> Step</button>
+          </div>
+          <div class="speed-row"><label for="speedRange">Speed</label><output id="speedValue">8 gen/s</output></div>
+          <input id="speedRange" type="range" min="1" max="20" value="8" />
+        </div>
+
+        <div class="control-block presets-block">
+          <div class="section-head"><span>PATTERN PRESETS</span><span class="sparkle">✦</span></div>
+          <div class="preset-list">
+            <button class="preset active" data-pattern="blank"><span class="pattern-icon blank-pattern"></span><span><b>Blank canvas</b><small>Start from scratch</small></span><span class="arrow">↗</span></button>
+            <button class="preset" data-pattern="glider"><span class="pattern-icon glider-pattern"><i></i><i></i><i></i></span><span><b>Glider</b><small>Small &amp; steady</small></span><span class="arrow">↗</span></button>
+            <button class="preset" data-pattern="gun"><span class="pattern-icon gun-pattern"></span><span><b>Gosper gun</b><small>Infinite movement</small></span><span class="arrow">↗</span></button>
+            <button class="preset" data-pattern="random"><span class="pattern-icon random-pattern">⁙</span><span><b>Random field</b><small>Find the unexpected</small></span><span class="arrow">↗</span></button>
+          </div>
+        </div>
+
+        <div class="control-block stats-block">
+          <div class="section-head"><span>LIVE STATS</span><span class="pulse-line">⌁</span></div>
+          <div class="stats-grid"><div><small>GENERATION</small><strong id="generation">00000</strong></div><div><small>POPULATION</small><strong id="population">0000</strong></div></div>
+        </div>
+
+        <button class="randomize-btn" id="randomizeBtn"><span>⤨</span> Randomize <kbd>R</kbd></button>
+      </aside>
+    </section>
+    <footer class="page-footer"><span>RULES: BIRTH 3 · SURVIVAL 2—3</span><span>BUILT FOR CURIOSITY <b>♥</b></span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
