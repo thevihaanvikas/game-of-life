@@ -94,3 +94,14 @@
   .canvas-frame { height:calc(100dvh - 175px); min-height:160px; }
   .page-footer { display:none; }
 }
+@media (max-height:760px) and (max-width:850px) and (orientation:portrait) {
+  .hero { padding-top:14px; padding-bottom:12px; }
+  .hero h1 { font-size:46px; }
+  .intro { margin-top:9px; line-height:1.35; }
+  .canvas-frame { height:185px; min-height:185px; }
+  .control-block { padding:8px 10px; }
+  .preset { padding-top:1px; padding-bottom:1px; }
+  .pattern-icon { width:23px; height:23px; }
+  .randomize-btn, .primary-btn, .step-btn { height:31px; }
+  .page-footer { padding-top:6px; }
+}
