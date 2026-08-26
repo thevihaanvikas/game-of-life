@@ -269,3 +269,18 @@ body[data-theme="contrast"]{--bg:#000;--panel:#080808;--line:#fff;--muted:#ddd;-
 @media (max-width:380px){
   .app-shell{padding-left:7px;padding-right:7px}.hero h1{font-size:34px}.intro{font-size:9px}.controls{max-height:48vh}.theme-options{gap:2px}.theme-btn{font-size:7px}.section-head{font-size:9px}.preset b{font-size:10px}.randomize-btn{padding-left:9px}
 }
+
+/* Simulation controls: use stable grid tracks so the block never compresses unpredictably. */
+.simulation-block{min-width:0}.simulation-block .transport{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.simulation-block .primary-btn,.simulation-block .step-btn{min-width:0;white-space:nowrap}.simulation-block .speed-row{gap:8px}.simulation-block input[type=range]{display:block;min-width:0}
+@media (max-width:850px){
+  .controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .simulation-block{grid-column:1;grid-row:1;min-width:0}
+  .stats-block{grid-column:2;grid-row:1;min-width:0}
+  .presets-block{grid-column:1 / -1;grid-row:2}
+  .appearance-block{grid-column:1 / -1;grid-row:3}
+  .randomize-btn{grid-column:1 / -1;grid-row:4}
+}
+@media (max-width:430px){
+  .simulation-block .section-head{letter-spacing:.08em}.simulation-block .transport{grid-template-columns:1fr}.simulation-block .step-btn{display:none}.simulation-block .speed-row{margin-top:8px}.simulation-block .speed-row label{font-size:10px}.simulation-block .speed-row output{font-size:9px}
+}
+@media (max-width:850px) and (orientation:landscape){.simulation-block .transport{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.simulation-block .step-btn{display:block}}
