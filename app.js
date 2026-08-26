@@ -156,12 +156,13 @@ function draw(now = performance.now()) {
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
 
-  const gridWidth = width * zoom;
-  const gridHeight = height * zoom;
+  const cellSize = Math.min(width / cols, height / rows) * zoom;
+  const gridWidth = cellSize * cols;
+  const gridHeight = cellSize * rows;
   const left = (width - gridWidth) / 2;
   const top = (height - gridHeight) / 2;
-  const cellWidth = gridWidth / cols;
-  const cellHeight = gridHeight / rows;
+  const cellWidth = cellSize;
+  const cellHeight = cellSize;
 
   ctx.strokeStyle = grid;
   ctx.lineWidth = 1 / pixelRatio;
@@ -404,11 +405,14 @@ function cellFromEvent(event) {
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return [-1, -1];
 
-  const normalizedX = (event.clientX - rect.left) / rect.width;
-  const normalizedY = (event.clientY - rect.top) / rect.height;
-  const gridX = (normalizedX - (1 - zoom) / 2) / zoom;
-  const gridY = (normalizedY - (1 - zoom) / 2) / zoom;
-  return [Math.floor(gridX * cols), Math.floor(gridY * rows)];
+  const cellSize = Math.min(rect.width / cols, rect.height / rows) * zoom;
+  const gridWidth = cellSize * cols;
+  const gridHeight = cellSize * rows;
+  const left = (rect.width - gridWidth) / 2;
+  const top = (rect.height - gridHeight) / 2;
+  const gridX = (event.clientX - rect.left - left) / cellSize;
+  const gridY = (event.clientY - rect.top - top) / cellSize;
+  return [Math.floor(gridX), Math.floor(gridY)];
 }
 
 function finishDrawing(event) {
