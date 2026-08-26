@@ -19,7 +19,9 @@ const gridSizeSelect = document.getElementById('gridSize');
 const patternSelect = document.getElementById('patternSelect');
 const boundaryModeSelect = document.getElementById('boundaryMode');
 const settingsTrigger = document.getElementById('settingsTrigger');
+const settingsDesktopTrigger = document.getElementById('settingsDesktopTrigger');
 const settingsPanel = document.getElementById('settingsPanel');
+const settingsBackdrop = document.getElementById('settingsBackdrop');
 const settingsClose = document.getElementById('settingsClose');
 
 let cols = 48;
@@ -44,6 +46,7 @@ let effectFrame = 0;
 let trailEnabled = true;
 let gridSizeMode = 'responsive';
 let boundaryMode = 'wrap';
+let settingsOpener = null;
 let pixelRatio = 1;
 let chartPixelRatio = 1;
 
@@ -562,25 +565,42 @@ document.querySelectorAll('.preset').forEach((button) => {
   button.addEventListener('click', () => loadPattern(button.dataset.pattern));
 });
 
-function setSettingsOpen(open) {
+function setSettingsOpen(open, opener = null) {
+  if (open) {
+    settingsOpener = opener || settingsOpener;
+    // Opening settings is an intentional pause. The simulation stays paused
+    // after the menu closes so a settings change cannot be missed.
+    setRunning(false);
+  }
+
   settingsPanel.classList.toggle('open', open);
+  settingsBackdrop.classList.toggle('open', open);
+  settingsPanel.setAttribute('aria-hidden', String(!open));
+  settingsBackdrop.setAttribute('aria-hidden', String(!open));
   settingsTrigger.setAttribute('aria-expanded', String(open));
-  if (open) settingsPanel.removeAttribute('aria-hidden');
-  else if (window.matchMedia('(max-width: 700px)').matches) settingsPanel.setAttribute('aria-hidden', 'true');
-  else settingsPanel.removeAttribute('aria-hidden');
+  settingsDesktopTrigger.setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('settings-open', open);
+
+  if (open) {
+    settingsClose.focus();
+  } else {
+    settingsOpener?.focus();
+    settingsOpener = null;
+  }
 }
 
-settingsTrigger.addEventListener('click', () => setSettingsOpen(!settingsPanel.classList.contains('open')));
+function toggleSettings(opener) {
+  setSettingsOpen(!settingsPanel.classList.contains('open'), opener);
+}
+
+settingsTrigger.addEventListener('click', () => toggleSettings(settingsTrigger));
+settingsDesktopTrigger.addEventListener('click', () => toggleSettings(settingsDesktopTrigger));
 settingsClose.addEventListener('click', () => setSettingsOpen(false));
+settingsBackdrop.addEventListener('click', () => setSettingsOpen(false));
 gridSizeSelect.addEventListener('change', (event) => setGridSize(event.target.value));
 patternSelect.addEventListener('change', (event) => loadPattern(event.target.value));
 boundaryModeSelect.addEventListener('change', (event) => {
   boundaryMode = event.target.value === 'bounded' ? 'bounded' : 'wrap';
-});
-
-document.addEventListener('click', (event) => {
-  if (!settingsPanel.classList.contains('open') || !window.matchMedia('(max-width: 700px)').matches) return;
-  if (!settingsPanel.contains(event.target) && !settingsTrigger.contains(event.target)) setSettingsOpen(false);
 });
 
 document.getElementById('fitBtn').addEventListener('click', () => {
