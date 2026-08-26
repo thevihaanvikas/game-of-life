@@ -16,6 +16,17 @@ let cols = 48, rows = 30, cells = makeGrid();
 let running = false, generation = 0, timer = null, drawing = false, drawValue = true, zoom = 1;
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
+// Older mobile browsers can report 100vh as the full screen, including the system bar.
+// Use the visual viewport when available so the app's bottom edge stays in the visible area.
+function syncViewportHeight() {
+  const visualHeight = window.visualViewport?.height;
+  const height = Math.round(visualHeight || document.documentElement.clientHeight || window.innerHeight);
+  document.documentElement.style.setProperty('--viewport-height', `${height}px`);
+}
+syncViewportHeight();
+window.visualViewport?.addEventListener('resize', syncViewportHeight);
+window.addEventListener('resize', syncViewportHeight);
+
 function makeGrid() { return Array.from({length: rows}, () => new Uint8Array(cols)); }
 function setSize() {
   const rect = frame.getBoundingClientRect();
