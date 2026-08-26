@@ -166,3 +166,18 @@ body { overflow:hidden; }
   .random-pattern { line-height:22px; }
   .page-footer { padding-top:4px; }
 }
+@media (max-width:520px) and (max-height:620px) and (orientation:portrait) {
+  .app-shell { padding-top:8px; padding-bottom:5px; }
+  .hero { padding:5px 0 6px; }
+  .hero h1 { font-size:35px; }
+  .intro { font-size:10px; line-height:1.2; }
+  .canvas-frame { height:120px; min-height:120px; }
+  .control-block { padding:6px 8px; }
+  .section-head { margin-bottom:5px; }
+  .transport button, .randomize-btn { height:27px; }
+  .speed-row { margin:6px 0 2px; }
+  .preset { min-height:29px; }
+  .pattern-icon { width:19px; height:19px; }
+  .stats-grid strong { font-size:14px; }
+  .page-footer { display:none; }
+}
