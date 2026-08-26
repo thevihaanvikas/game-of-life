@@ -150,3 +150,19 @@ body { overflow:hidden; }
   .size-readout span:last-child { display:none; }
   .page-footer { font-size:8px; }
 }
+
+/* Portrait phone composition: turn the preset rail into a compact palette so the whole workspace stays visible. */
+@media (max-width:520px) {
+  .hero { padding-top:10px; padding-bottom:9px; }
+  .hero h1 { font-size:42px; }
+  .intro { margin-top:6px; }
+  .canvas-frame { height:clamp(138px, calc(100dvh - 610px), 190px); min-height:138px; }
+  .presets-block { padding:8px 9px; }
+  .preset-list { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+  .preset { min-height:35px; padding:3px; }
+  .preset .arrow { font-size:13px; }
+  .preset small { display:none; }
+  .pattern-icon { width:22px; height:22px; }
+  .random-pattern { line-height:22px; }
+  .page-footer { padding-top:4px; }
+}
