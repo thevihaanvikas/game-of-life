@@ -199,3 +199,21 @@ body { overflow:hidden; }
   .presets-block { grid-column:1 / -1; grid-row:2; }
   .randomize-btn { grid-column:1 / -1; grid-row:3; }
 }
+
+/* Mobile browser chrome / safe-area handling: reserve the bottom inset instead of letting it cover the footer. */
+@media (max-width:850px) {
+  .app-shell {
+    height:100vh;
+    height:100svh;
+    min-height:100svh;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  .canvas-frame { height:clamp(190px, calc(100svh - 560px - env(safe-area-inset-bottom, 0px)), 300px); }
+}
+@media (max-width:520px) {
+  .app-shell { padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .canvas-frame { height:clamp(138px, calc(100svh - 610px - env(safe-area-inset-bottom, 0px)), 190px); }
+}
+@media (max-width:520px) and (max-height:620px) and (orientation:portrait) {
+  .canvas-frame { height:clamp(112px, calc(100svh - 615px - env(safe-area-inset-bottom, 0px)), 120px); min-height:112px; }
+}
