@@ -1,3 +1,57 @@
+# Layout & theme fix v5
+
+## What changed in v5
+
+### Removals
+
+- **Grid size controls removed.** The Settings panel no longer offers
+  fixed grid sizes; the grid is always sized responsively to the board
+  frame. The associated state (`gridSizeMode`, `fixedGridSizes`,
+  `setGridSize`) is gone from `app.js`.
+- **High contrast theme removed.** The theme button, token block,
+  canvas colors, meta theme-color, and `favicon-contrast.svg` are all
+  gone. Only Dark and Light remain.
+
+### Light mode follows the dark scheme
+
+Light is now the exact inverse of the dark scheme instead of a soft
+glass theme: white page, solid near-white panels, **black hairlines**,
+flat surfaces, no shadows, no blur, no ambient glow, and a
+`rgba(0, 0, 0, 0.36)` canvas grid mirroring dark's white-on-black grid.
+The primary green is `#00b300` (dark enough to stay readable on white);
+the secondary cyan stays a readable dark teal.
+
+### Faint-centre gridline glitch fixed
+
+The canvas bitmap was sized from `frame.clientWidth`, which is a
+*rounded integer*, while the element actually renders at a fractional
+CSS size. The browser then resampled the bitmap onto the element box,
+and the sub-pixel drift landed some gridlines (typically around the
+centre of the board) between device pixels, where antialiasing rendered
+them at reduced opacity.
+
+- `setSize` now measures the frame with `getBoundingClientRect()`
+  (fractional, exact).
+- The canvas element is pinned via inline styles to exactly
+  `bitmap / dpr` CSS pixels, so the bitmap maps 1:1 onto device pixels
+  and is never resampled.
+- `draw()` works in that same pinned coordinate space and snaps every
+  gridline to a device pixel boundary
+  (`(round(css * dpr) + 0.5) / dpr`), so each line gets exactly one
+  full device pixel of coverage at any device pixel ratio.
+
+### Legend and preset icons
+
+- The board legend is now a single plain square (no border radius, no
+  glow) labelled "Life"; the Trail square and label are gone.
+- The Glider and Random field preset icons are inline SVGs on a 3x3
+  `viewBox`, so they scale with the icon box at every breakpoint. The
+  old CSS drawing used fixed pixel offsets (`top: 7px; left: 8px` and
+  fixed-size box-shadows), which drifted out of the icon as the box
+  shrank and resized.
+
+---
+
 # Layout & theme fix v4
 
 ## What changed in v4

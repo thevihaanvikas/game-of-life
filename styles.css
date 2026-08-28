@@ -10,7 +10,7 @@
    2. Landscape viewports never scroll: the shell is locked to exactly one
       viewport height and every rail size is a vh-driven clamp, so the
       interface compresses fluidly on short windows instead of switching
-      layouts (see section 9). Height is used only for that fluid scaling
+      layouts (see section 8). Height is used only for that fluid scaling
       and for dropping purely decorative copy on very short windows —
       never to choose a different layout structure.
    3. Portrait viewports (and sub-500px landscape windows, which cannot
@@ -27,16 +27,17 @@
 /* --------------------------------------------------------------------------
    1. Theme tokens
    --------------------------------------------------------------------------
-   Dark is the flat, high-contrast scheme (pure black surfaces, white
-   hairlines, no shadows, no blur) with a GREEN primary color. Light keeps
-   the soft glass look. High contrast is pure black/white/yellow.
+   Both themes share the same flat, high-contrast scheme: solid surfaces,
+   full-contrast hairlines, no shadows, no blur, no glow. Dark is black
+   surfaces with white hairlines and a green primary; Light is the exact
+   inverse — white surfaces with black hairlines and a deeper green that
+   stays readable on white.
    -------------------------------------------------------------------------- */
 
 :root {
   color-scheme: dark;
 
   --bg: #000000;
-  --bg-deep: #000000;
   --panel: #080808;
   --panel-solid: #080808;
   --surface: #111111;
@@ -68,104 +69,55 @@
 
   --block-shadow: none;
   --shadow: none;
-  --panel-blur: none;
-  --ambient-opacity: 0;
   --modal-backdrop: rgba(0, 0, 0, 0.72);
 
   --mono: "DM Mono", monospace;
   --sans: "Space Grotesk", sans-serif;
 }
 
+/* Light mirrors dark token for token: white page, black hairlines, flat
+   gray surfaces. The green and cyan are darkened just enough to stay
+   readable on white; everything else is a 1:1 inversion. */
 body[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #edf4f1;
-  --bg-deep: #e5eeeb;
-  --panel: rgba(255, 255, 255, 0.86);
+  --bg: #ffffff;
+  --panel: #f7f7f7;
   --panel-solid: #ffffff;
-  --surface: rgba(29, 76, 67, 0.055);
-  --surface-hover: rgba(29, 76, 67, 0.1);
-  --line: rgba(32, 62, 58, 0.17);
-  --line-strong: rgba(32, 62, 58, 0.3);
-  --muted: #536b69;
-  --muted-strong: #315955;
-  --text: #142b2a;
-  --text-soft: #234642;
+  --surface: #f0f0f0;
+  --surface-hover: #e2e2e2;
+  --line: #000000;
+  --line-strong: #000000;
+  --muted: #4d4d4d;
+  --muted-strong: #000000;
+  --text: #000000;
+  --text-soft: #000000;
 
-  /* The UI accent stays bright for the primary action; cells use the darker
-     --cell-alive so both surfaces stay readable. */
-  --lime: #a9d96b;
-  --cell-alive: #27734a;
+  --lime: #00b300;
+  --cell-alive: #00b300;
   --cyan: #16718a;
-  --accent-ink: #17351e;
-
-  --canvas-bg: #f6faf8;
-  --canvas-grid: rgba(48, 86, 77, 0.2);
-  --canvas-border: rgba(32, 62, 58, 0.22);
-  --pattern-bg: #e4efea;
-  --pattern-dot: #6b9188;
-  --chart: #16718a;
-  --heart: #c24f72;
-  --random-bg: rgba(22, 113, 138, 0.08);
-  --random-border: rgba(22, 113, 138, 0.3);
-  --accent-glow: rgba(39, 115, 74, 0.24);
-
-  --block-shadow: 0 12px 30px rgba(30, 67, 60, 0.08);
-  --shadow: 0 18px 42px rgba(30, 67, 60, 0.12);
-  --panel-blur: blur(20px);
-  --ambient-opacity: 0.08;
-  --modal-backdrop: rgba(23, 60, 51, 0.18);
-}
-
-body[data-theme="contrast"] {
-  color-scheme: dark;
-
-  --bg: #000000;
-  --bg-deep: #000000;
-  --panel: #080808;
-  --panel-solid: #080808;
-  --surface: #111111;
-  --surface-hover: #1d1d1d;
-  --line: #ffffff;
-  --line-strong: #ffffff;
-  --muted: #dddddd;
-  --muted-strong: #ffffff;
-  --text: #ffffff;
-  --text-soft: #ffffff;
-
-  --lime: #ffff00;
-  --cell-alive: #ffff00;
-  --cyan: #00ffff;
   --accent-ink: #000000;
 
-  --canvas-bg: #000000;
-  --canvas-grid: rgba(255, 255, 255, 0.36);
-  --canvas-border: #ffffff;
-  --pattern-bg: #000000;
-  --pattern-dot: #ffffff;
-  --chart: #00ffff;
-  --heart: #ff7ca5;
-  --random-bg: #001d1d;
-  --random-border: #00ffff;
+  --canvas-bg: #ffffff;
+  --canvas-grid: rgba(0, 0, 0, 0.36);
+  --canvas-border: #000000;
+  --pattern-bg: #ffffff;
+  --pattern-dot: #000000;
+  --chart: #16718a;
+  --heart: #d81b60;
+  --random-bg: #e2f0f4;
+  --random-border: #16718a;
   --accent-glow: transparent;
 
   --block-shadow: none;
   --shadow: none;
-  --panel-blur: none;
-  --ambient-opacity: 0;
-  --modal-backdrop: rgba(0, 0, 0, 0.72);
-}
-
-/* The dark and high-contrast themes are flat: no ambient glow blobs. */
-body[data-theme="dark"] .ambient,
-body[data-theme="contrast"] .ambient {
-  display: none;
+  --modal-backdrop: rgba(0, 0, 0, 0.45);
 }
 
 /* Keep the overscroll area in sync with the theme (progressive
    enhancement; harmless where :has() is unsupported). */
 html:has(body[data-theme="light"]) {
-  background: #edf4f1;
+  background: #ffffff;
 }
 
 /* --------------------------------------------------------------------------
@@ -213,37 +165,7 @@ a:focus-visible {
 }
 
 /* --------------------------------------------------------------------------
-   3. Ambient decoration (light theme only — see theme tokens)
-   -------------------------------------------------------------------------- */
-
-.ambient {
-  position: fixed;
-  z-index: 0;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: var(--ambient-opacity);
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.ambient-one {
-  top: -220px;
-  left: -210px;
-  background: #3849c7;
-}
-
-.ambient-two {
-  right: -230px;
-  bottom: -200px;
-  width: 430px;
-  height: 430px;
-  background: #23a6a5;
-}
-
-/* --------------------------------------------------------------------------
-   4. App shell, top bar, hero
+   3. App shell, top bar, hero
    -------------------------------------------------------------------------- */
 
 .app-shell {
@@ -381,7 +303,7 @@ a:focus-visible {
 }
 
 /* --------------------------------------------------------------------------
-   5. Workspace: board + controls
+   4. Workspace: board + controls
    --------------------------------------------------------------------------
    Base layout is a single stacked column (phones and portrait tablets).
    Side-by-side layouts are opt-in via width/orientation media queries in
@@ -400,8 +322,6 @@ a:focus-visible {
   border-radius: 14px;
   background: var(--panel);
   box-shadow: var(--shadow);
-  -webkit-backdrop-filter: var(--panel-blur);
-  backdrop-filter: var(--panel-blur);
 }
 
 .board-wrap {
@@ -581,19 +501,11 @@ a:focus-visible {
   width: 7px;
   height: 7px;
   flex: 0 0 auto;
-  border-radius: 1px;
   background: var(--surface-hover);
 }
 
 .legend-cell.on {
   background: var(--cell-alive);
-  box-shadow: 0 0 8px var(--cell-alive);
-}
-
-.legend-cell.trail {
-  background: var(--cyan);
-  box-shadow: 0 0 7px var(--cyan);
-  opacity: 0.38;
 }
 
 .sep {
@@ -602,7 +514,7 @@ a:focus-visible {
 }
 
 /* --------------------------------------------------------------------------
-   6. Control rail blocks
+   5. Control rail blocks
    -------------------------------------------------------------------------- */
 
 .controls {
@@ -620,8 +532,6 @@ a:focus-visible {
   border-radius: 11px;
   background: var(--panel);
   box-shadow: var(--block-shadow);
-  -webkit-backdrop-filter: var(--panel-blur);
-  backdrop-filter: var(--panel-blur);
 }
 
 /* Stacked layout: pairs on row 1, full-width sections below. */
@@ -807,16 +717,17 @@ input[type="range"] {
   font-size: 16px;
 }
 
-.glider-pattern::after {
-  position: absolute;
-  top: 7px;
-  left: 8px;
-  width: 5px;
-  height: 5px;
-  background: var(--cell-alive);
-  box-shadow: 7px 0 var(--cell-alive), 14px 0 var(--cell-alive),
-    14px 7px var(--cell-alive), 7px 14px var(--cell-alive);
-  content: "";
+/* Glider and Random field icons are inline SVGs on a 3x3 viewBox, so they
+   scale perfectly with the icon box at every breakpoint — the old
+   pixel-offset drawing drifted out of the icon as the box shrank. */
+.pattern-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.glider-pattern svg rect {
+  fill: var(--cell-alive);
 }
 
 .gun-pattern {
@@ -824,12 +735,8 @@ input[type="range"] {
   opacity: 0.7;
 }
 
-.random-pattern {
-  background-image: none;
-  color: var(--cyan);
-  font: 25px var(--mono);
-  line-height: 30px;
-  text-align: center;
+.random-pattern svg circle {
+  fill: var(--cyan);
 }
 
 .stats-block {
@@ -1030,7 +937,7 @@ input[type="range"] {
 }
 
 /* --------------------------------------------------------------------------
-   7. Settings: header gear, desktop rail trigger, modal panel
+   6. Settings: header gear, desktop rail trigger, modal panel
    -------------------------------------------------------------------------- */
 
 .header-tools {
@@ -1290,7 +1197,7 @@ input[type="range"] {
 }
 
 /* --------------------------------------------------------------------------
-   8. Phone refinements (portrait and landscape)
+   7. Phone refinements (portrait and landscape)
    -------------------------------------------------------------------------- */
 
 @media (max-width: 600px) {
@@ -1371,11 +1278,6 @@ input[type="range"] {
     background-size: 6px 6px;
   }
 
-  .random-pattern {
-    font-size: 20px;
-    line-height: 23px;
-  }
-
   .stats-grid {
     gap: 8px;
   }
@@ -1442,7 +1344,7 @@ input[type="range"] {
 }
 
 /* --------------------------------------------------------------------------
-   9. Landscape: the interface always fits, never scrolls
+   8. Landscape: the interface always fits, never scrolls
    --------------------------------------------------------------------------
    Any landscape viewport wide enough for a board plus a rail (>= 500px)
    locks the whole app to one viewport height:
@@ -1716,7 +1618,7 @@ input[type="range"] {
 }
 
 /* --------------------------------------------------------------------------
-   10. Reduced motion
+   9. Reduced motion
    -------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {

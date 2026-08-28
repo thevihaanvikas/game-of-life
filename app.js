@@ -15,7 +15,6 @@ const speedValue = document.getElementById('speedValue');
 const gridReadout = document.getElementById('gridReadout');
 const themeColorMeta = document.getElementById('themeColor');
 const faviconLink = document.getElementById('favicon');
-const gridSizeSelect = document.getElementById('gridSize');
 const patternSelect = document.getElementById('patternSelect');
 const boundaryModeSelect = document.getElementById('boundaryMode');
 const settingsTrigger = document.getElementById('settingsTrigger');
@@ -44,11 +43,12 @@ let history = [0];
 let effects = [];
 let effectFrame = 0;
 let trailEnabled = true;
-let gridSizeMode = 'responsive';
 let boundaryMode = 'wrap';
 let settingsOpener = null;
 let pixelRatio = 1;
 let chartPixelRatio = 1;
+let viewWidth = 0;
+let viewHeight = 0;
 
 const themeColors = {
   dark: {
@@ -58,29 +58,21 @@ const themeColors = {
     grid: 'rgba(255, 255, 255, 0.36)',
   },
   light: {
-    alive: '#27734a',
+    alive: '#00b300',
     accent: '#16718a',
-    background: '#f6faf8',
-    grid: 'rgba(48, 86, 77, 0.2)',
-  },
-  contrast: {
-    alive: '#ffff00',
-    accent: '#00ffff',
-    background: '#000000',
-    grid: 'rgba(255, 255, 255, 0.36)',
+    background: '#ffffff',
+    grid: 'rgba(0, 0, 0, 0.36)',
   },
 };
 
 const metaThemeColors = {
   dark: '#000000',
-  light: '#edf4f1',
-  contrast: '#000000',
+  light: '#ffffff',
 };
 
 const faviconByTheme = {
   dark: 'favicon.svg',
   light: 'favicon-light.svg',
-  contrast: 'favicon-contrast.svg',
 };
 
 const patterns = {
@@ -143,28 +135,10 @@ function resizeGrid(nextCols, nextRows) {
   updateGridReadout();
 }
 
-const fixedGridSizes = {
-  compact: [40, 20],
-  standard: [48, 30],
-  large: [72, 45],
-};
-
 function resizeGridForViewport(width, height) {
-  if (gridSizeMode !== 'responsive') return;
   const nextCols = Math.max(MIN_COLS, Math.min(MAX_COLS, Math.round(width / TARGET_CELL_SIZE)));
   const nextRows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, Math.round(height / TARGET_CELL_SIZE)));
   resizeGrid(nextCols, nextRows);
-}
-
-function setGridSize(mode) {
-  gridSizeMode = fixedGridSizes[mode] ? mode : 'responsive';
-  if (gridSizeMode === 'responsive') {
-    resizeGridForViewport(frame.clientWidth, frame.clientHeight);
-  } else {
-    const [nextCols, nextRows] = fixedGridSizes[gridSizeMode];
-    resizeGrid(nextCols, nextRows);
-  }
-  draw();
 }
 
 function currentTheme() {
@@ -186,28 +160,38 @@ function updateReadouts() {
   generationEl.textContent = String(generation).padStart(5, '0');
 }
 
-function resizeCanvas(target, context, width, height) {
+function resizeCanvas(target, context, width, height, pinSize) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   target.width = Math.max(1, Math.round(width * dpr));
   target.height = Math.max(1, Math.round(height * dpr));
+  if (pinSize) {
+    // Pin the element to the exact size of its bitmap. Layout sizes are
+    // fractional, so sizing the bitmap from the rounded clientWidth left
+    // it a fraction of a pixel off the element box; the browser then
+    // resampled the canvas and rendered some gridlines (typically around
+    // the centre) at half opacity. With the element pinned to the bitmap
+    // there is no resampling at all.
+    target.style.width = `${target.width / dpr}px`;
+    target.style.height = `${target.height / dpr}px`;
+  }
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
   return dpr;
 }
 
 function setSize() {
   const boardRect = frame.getBoundingClientRect();
-  const boardWidth = Math.floor(frame.clientWidth || boardRect.width);
-  const boardHeight = Math.floor(frame.clientHeight || boardRect.height);
 
-  if (boardWidth > 0 && boardHeight > 0) {
-    pixelRatio = resizeCanvas(canvas, ctx, boardWidth, boardHeight);
-    resizeGridForViewport(boardWidth, boardHeight);
+  if (boardRect.width > 0 && boardRect.height > 0) {
+    viewWidth = boardRect.width;
+    viewHeight = boardRect.height;
+    pixelRatio = resizeCanvas(canvas, ctx, viewWidth, viewHeight, true);
+    resizeGridForViewport(viewWidth, viewHeight);
   }
 
   if (chart && chartCtx) {
     const chartRect = chart.getBoundingClientRect();
     if (chartRect.width > 0 && chartRect.height > 0) {
-      chartPixelRatio = resizeCanvas(chart, chartCtx, chartRect.width, chartRect.height);
+      chartPixelRatio = resizeCanvas(chart, chartCtx, chartRect.width, chartRect.height, false);
     }
   }
 
@@ -232,8 +216,11 @@ function animateEffects(now) {
 }
 
 function draw(now = performance.now()) {
-  const width = frame.clientWidth;
-  const height = frame.clientHeight;
+  // Draw in the canvas' own coordinate space (bitmap / dpr). The element is
+  // pinned to that exact size in resizeCanvas, so every coordinate maps
+  // 1:1 onto device pixels — nothing is resampled or blurred.
+  const width = canvas.width / pixelRatio;
+  const height = canvas.height / pixelRatio;
   if (!width || !height) return;
 
   const { alive, accent, background, grid } = colorsForTheme();
@@ -252,12 +239,14 @@ function draw(now = performance.now()) {
   ctx.lineWidth = 1 / pixelRatio;
   ctx.beginPath();
   for (let x = 0; x <= cols; x += 1) {
-    const px = Math.round(left + x * cellWidth) + 0.5 / pixelRatio;
+    // Snap each line to a device pixel boundary so every gridline gets
+    // exactly one full device pixel of coverage at any dpr.
+    const px = (Math.round((left + x * cellWidth) * pixelRatio) + 0.5) / pixelRatio;
     ctx.moveTo(px, top);
     ctx.lineTo(px, top + gridHeight);
   }
   for (let y = 0; y <= rows; y += 1) {
-    const py = Math.round(top + y * cellHeight) + 0.5 / pixelRatio;
+    const py = (Math.round((top + y * cellHeight) * pixelRatio) + 0.5) / pixelRatio;
     ctx.moveTo(left, py);
     ctx.lineTo(left + gridWidth, py);
   }
@@ -597,7 +586,6 @@ settingsTrigger.addEventListener('click', () => toggleSettings(settingsTrigger))
 settingsDesktopTrigger.addEventListener('click', () => toggleSettings(settingsDesktopTrigger));
 settingsClose.addEventListener('click', () => setSettingsOpen(false));
 settingsBackdrop.addEventListener('click', () => setSettingsOpen(false));
-gridSizeSelect.addEventListener('change', (event) => setGridSize(event.target.value));
 patternSelect.addEventListener('change', (event) => loadPattern(event.target.value));
 boundaryModeSelect.addEventListener('change', (event) => {
   boundaryMode = event.target.value === 'bounded' ? 'bounded' : 'wrap';
