@@ -1,3 +1,77 @@
+# Layout & rendering fix v6
+
+## What changed in v6
+
+Five user-visible bugs, each traced to a distinct root cause:
+
+### 1. Population chart rendered at half its allotted width
+
+`.population-chart canvas` had **no CSS width**. An unpinned `<canvas>`
+renders at its intrinsic size — the bitmap — which is `rect x dpr` device
+pixels. At dpr 2 the element was therefore twice as wide as its container
+and `.stats-block { overflow: hidden }` clipped it to the **left half**.
+(It looked correct at dpr 1, which is why static checks missed it.)
+
+- Fixed with `display: block; width: 100%` (the CSS clamp keeps owning the
+  height); `drawChart()` now draws in the bitmap's own coordinate space
+  (`chart.width / chartPixelRatio`).
+
+### 2. The faint gridline "moved to the side" — two stacked causes
+
+- **Border-box vs content-box**: `setSize` measured
+  `frame.getBoundingClientRect()` (the *border* box, 1px border) but the
+  canvas element is clamped by `max-width: 100%` to the *content* box, so
+  the element came out ~2px narrower than its pinned bitmap. The browser
+  resampled (with `image-rendering: pixelated`, nearest-neighbour), which
+  dropped whole device columns and ate gridlines. `setSize` now measures
+  the content box (`contentBoxOf`) and the bitmap is `floor()`-ed so the
+  pin is always **inside** the content box — `max-width` can never clamp
+  and the bitmap maps 1:1 onto device pixels.
+- **Edge-flush lines clipped to half opacity**: the snap formula
+  `(round(x * dpr) + 0.5) / dpr` pushes a line that sits exactly on the
+  canvas edge half a device pixel *outside* the bitmap, where it renders
+  at half width — a faint line hugging the right/bottom side. Lines that
+  belong inside the canvas are now clamped to its last device pixel.
+- **dpr capped at 2**: every device with dpr > 2 (2.625/2.75/3 — a large
+  share of Android phones, Plus/Pro Max iPhones) upscaled the pinned
+  bitmap by 1.3–1.5x with nearest-neighbour, making line weights uneven
+  regardless of snapping. The cap is now 4, restoring the 1:1 mapping on
+  real screens.
+
+### 3. Cells stretched into rectangles
+
+`cols` and `rows` were derived independently (`round(width / 14)` etc.)
+with 40x20 minimums, so narrow/short frames produced 8.5 x 21px
+"cells". The grid now derives **one square cell size** —
+`cell = min(14, width / 40, height / 20)` — with
+`cols = floor(width / cell)`, `rows = floor(height / cell)`, drawn
+centred with letterboxing (letterbox stripes are the canvas background
+colour, so they are invisible). Cells are square at every aspect ratio,
+including 340px phones and ultrawide landscape.
+
+### 4. Painting offset — geometry split across two code paths
+
+`draw()` and `cellFromEvent()` each implemented the zoom/letterbox maths
+separately (and the click path assumed the grid fills the whole element).
+Both now go through one `gridGeometry()` — the single source of truth —
+and `cellFromEvent()` is its exact inverse, mapping through the element
+rect so clicks stay correct even if a future stylesheet clamps the
+canvas. Verified end-to-end in a mock-DOM harness: a drag across every
+aspect ratio / dpr / zoom lights up exactly the cells under the finger,
+contiguously, with no leakage into other rows.
+
+### 5. Preset icons — dot grid fighting the SVG
+
+The Glider/Random inline SVGs (added in v5) were drawn **on top of** the
+old CSS dot-grid background (`radial-gradient` dots at a fixed 7px pitch
+that does not scale with the icon box) — two unaligned patterns stacked,
+which read as "still broken". All four presets (Blank, Glider, Gun,
+Random) are now a single inline SVG each on a 3x3 `viewBox`, on a clean
+solid chip with no background pattern; they scale crisply from 16px to
+31px.
+
+---
+
 # Layout & theme fix v5
 
 ## What changed in v5

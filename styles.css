@@ -683,8 +683,6 @@ input[type="range"] {
   flex: 0 0 auto;
   border-radius: 3px;
   background-color: var(--pattern-bg);
-  background-image: radial-gradient(var(--pattern-dot) 1.5px, transparent 1.5px);
-  background-size: 7px 7px;
 }
 
 .preset > span:nth-child(2) {
@@ -717,9 +715,9 @@ input[type="range"] {
   font-size: 16px;
 }
 
-/* Glider and Random field icons are inline SVGs on a 3x3 viewBox, so they
-   scale perfectly with the icon box at every breakpoint — the old
-   pixel-offset drawing drifted out of the icon as the box shrank. */
+/* Every preset icon is a single inline SVG on a 3×3 viewBox: it scales with
+   the icon box at every breakpoint and nothing (no CSS dot-grid) is layered
+   underneath to fight it. */
 .pattern-icon svg {
   display: block;
   width: 100%;
@@ -730,13 +728,16 @@ input[type="range"] {
   fill: var(--cell-alive);
 }
 
-.gun-pattern {
-  background-image: radial-gradient(var(--cyan) 1.5px, transparent 1.5px);
-  opacity: 0.7;
+.gun-pattern svg rect {
+  fill: var(--cyan);
 }
 
 .random-pattern svg circle {
   fill: var(--cyan);
+}
+
+.blank-pattern svg rect {
+  fill: var(--pattern-dot);
 }
 
 .stats-block {
@@ -1275,7 +1276,6 @@ input[type="range"] {
   .pattern-icon {
     width: 23px;
     height: 23px;
-    background-size: 6px 6px;
   }
 
   .stats-grid {
@@ -1535,7 +1535,6 @@ input[type="range"] {
     width: clamp(16px, 2.6vh, 22px);
     height: clamp(16px, 2.6vh, 22px);
     flex-basis: clamp(16px, 2.6vh, 22px);
-    background-size: 6px 6px;
   }
 
   .stats-grid {
@@ -1555,7 +1554,12 @@ input[type="range"] {
     margin-top: clamp(4px, 1vh, 10px);
   }
 
+  /* width:100% is the fix for the "half a chart" bug: without it the canvas
+     rendered at its intrinsic bitmap size (rect × dpr), which at dpr 2 is
+     twice the container, and overflow:hidden clipped it to the left half. */
   .population-chart canvas {
+    display: block;
+    width: 100%;
     height: clamp(14px, 4.2vh, 42px);
   }
 

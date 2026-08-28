@@ -136,8 +136,13 @@ function resizeGrid(nextCols, nextRows) {
 }
 
 function resizeGridForViewport(width, height) {
-  const nextCols = Math.max(MIN_COLS, Math.min(MAX_COLS, Math.round(width / TARGET_CELL_SIZE)));
-  const nextRows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, Math.round(height / TARGET_CELL_SIZE)));
+  // One cell size for BOTH axes, so cells are always perfect squares. The
+  // minimum grid is 40×20; on frames too small for that at the target size
+  // the cell shrinks (instead of the cells stretching into rectangles).
+  const cell = Math.min(TARGET_CELL_SIZE, width / MIN_COLS, height / MIN_ROWS);
+  // +1e-4 guards floor() against float division returning 39.99999999.
+  const nextCols = Math.min(MAX_COLS, Math.floor(width / cell + 1e-4));
+  const nextRows = Math.min(MAX_ROWS, Math.floor(height / cell + 1e-4));
   resizeGrid(nextCols, nextRows);
 }
 
@@ -160,38 +165,57 @@ function updateReadouts() {
   generationEl.textContent = String(generation).padStart(5, '0');
 }
 
-function resizeCanvas(target, context, width, height, pinSize) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  target.width = Math.max(1, Math.round(width * dpr));
-  target.height = Math.max(1, Math.round(height * dpr));
-  if (pinSize) {
-    // Pin the element to the exact size of its bitmap. Layout sizes are
-    // fractional, so sizing the bitmap from the rounded clientWidth left
-    // it a fraction of a pixel off the element box; the browser then
-    // resampled the canvas and rendered some gridlines (typically around
-    // the centre) at half opacity. With the element pinned to the bitmap
-    // there is no resampling at all.
-    target.style.width = `${target.width / dpr}px`;
-    target.style.height = `${target.height / dpr}px`;
-  }
+function resizeCanvas(target, context, cssWidth, cssHeight) {
+  // Size the bitmap in WHOLE device pixels and pin the element to bitmap/dpr.
+  // floor() guarantees the pin never exceeds the measured content box, so the
+  // CSS `max-width: 100%` can never clamp the element below its bitmap: the
+  // bitmap maps 1:1 onto device pixels and nothing is ever resampled (the
+  // v5 bug: the border box was measured, the element came out ~2px smaller
+  // than the bitmap, and nearest-neighbour resampling ate whole gridlines).
+  const dpr = Math.min(window.devicePixelRatio || 1, 4);
+  target.width = Math.max(1, Math.floor(cssWidth * dpr));
+  target.height = Math.max(1, Math.floor(cssHeight * dpr));
+  target.style.width = `${target.width / dpr}px`;
+  target.style.height = `${target.height / dpr}px`;
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
   return dpr;
 }
 
-function setSize() {
-  const boardRect = frame.getBoundingClientRect();
+function resizeCanvasUnpinned(target, context, cssWidth, cssHeight) {
+  // For the chart the CSS (width:100% + clamped height) owns the element size;
+  // only the bitmap is scaled by the dpr so lines stay crisp.
+  const dpr = Math.min(window.devicePixelRatio || 1, 4);
+  target.width = Math.max(1, Math.round(cssWidth * dpr));
+  target.height = Math.max(1, Math.round(cssHeight * dpr));
+  context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return dpr;
+}
 
-  if (boardRect.width > 0 && boardRect.height > 0) {
-    viewWidth = boardRect.width;
-    viewHeight = boardRect.height;
-    pixelRatio = resizeCanvas(canvas, ctx, viewWidth, viewHeight, true);
+function contentBoxOf(element) {
+  // getBoundingClientRect() is the BORDER box; the canvas lives inside the
+  // border, so the drawable area is the content box.
+  const rect = element.getBoundingClientRect();
+  const style = getComputedStyle(element);
+  return {
+    width: rect.width - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth),
+    height: rect.height - parseFloat(style.borderTopWidth) - parseFloat(style.borderBottomWidth),
+  };
+}
+
+function setSize() {
+  const board = contentBoxOf(frame);
+
+  if (board.width > 0 && board.height > 0) {
+    viewWidth = board.width;
+    viewHeight = board.height;
+    pixelRatio = resizeCanvas(canvas, ctx, viewWidth, viewHeight);
     resizeGridForViewport(viewWidth, viewHeight);
   }
 
   if (chart && chartCtx) {
     const chartRect = chart.getBoundingClientRect();
     if (chartRect.width > 0 && chartRect.height > 0) {
-      chartPixelRatio = resizeCanvas(chart, chartCtx, chartRect.width, chartRect.height, false);
+      chartPixelRatio = resizeCanvasUnpinned(chart, chartCtx, chartRect.width, chartRect.height);
     }
   }
 
@@ -215,12 +239,27 @@ function animateEffects(now) {
   }
 }
 
+function gridGeometry() {
+  // The single source of truth for grid layout. draw() paints through this
+  // and cellFromEvent() inverts it exactly, so what you tap is always the
+  // cell that lights up — at any aspect ratio, dpr or zoom.
+  const width = canvas.width / pixelRatio;
+  const height = canvas.height / pixelRatio;
+  const cell = Math.min(width / cols, height / rows) * zoom; // square cells
+  return {
+    width,
+    height,
+    cell,
+    left: (width - cell * cols) / 2,
+    top: (height - cell * rows) / 2,
+  };
+}
+
 function draw(now = performance.now()) {
   // Draw in the canvas' own coordinate space (bitmap / dpr). The element is
   // pinned to that exact size in resizeCanvas, so every coordinate maps
   // 1:1 onto device pixels — nothing is resampled or blurred.
-  const width = canvas.width / pixelRatio;
-  const height = canvas.height / pixelRatio;
+  const { width, height, cell, left, top } = gridGeometry();
   if (!width || !height) return;
 
   const { alive, accent, background, grid } = colorsForTheme();
@@ -228,45 +267,50 @@ function draw(now = performance.now()) {
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
 
-  const gridWidth = width * zoom;
-  const gridHeight = height * zoom;
-  const left = (width - gridWidth) / 2;
-  const top = (height - gridHeight) / 2;
-  const cellWidth = gridWidth / cols;
-  const cellHeight = gridHeight / rows;
+  const gridWidth = cell * cols;
+  const gridHeight = cell * rows;
 
   ctx.strokeStyle = grid;
   ctx.lineWidth = 1 / pixelRatio;
   ctx.beginPath();
+  // Snap each line to a device pixel boundary so every gridline gets
+  // exactly one full device pixel of coverage at any dpr. The +0.5 can push
+  // an edge-flush line half a device pixel outside the bitmap — where it
+  // would be clipped to half opacity (the stubborn "faint line on the
+  // side") — so lines that belong inside the canvas are clamped to its
+  // last device pixel. Lines genuinely outside (zoom > 1) are left alone.
+  const snapLine = (position, edge, bitmapEdge) => {
+    let device = Math.round(position * pixelRatio);
+    if (position <= edge + 1e-6) device = Math.min(device, bitmapEdge - 1);
+    if (position >= -1e-6) device = Math.max(device, 0);
+    return (device + 0.5) / pixelRatio;
+  };
   for (let x = 0; x <= cols; x += 1) {
-    // Snap each line to a device pixel boundary so every gridline gets
-    // exactly one full device pixel of coverage at any dpr.
-    const px = (Math.round((left + x * cellWidth) * pixelRatio) + 0.5) / pixelRatio;
+    const px = snapLine(left + x * cell, width, canvas.width);
     ctx.moveTo(px, top);
     ctx.lineTo(px, top + gridHeight);
   }
   for (let y = 0; y <= rows; y += 1) {
-    const py = (Math.round((top + y * cellHeight) * pixelRatio) + 0.5) / pixelRatio;
+    const py = snapLine(top + y * cell, height, canvas.height);
     ctx.moveTo(left, py);
     ctx.lineTo(left + gridWidth, py);
   }
   ctx.stroke();
 
-  const padding = Math.max(1.5, Math.min(cellWidth, cellHeight) * 0.18);
-  const cellDrawWidth = Math.max(1, cellWidth - padding * 2);
-  const cellDrawHeight = Math.max(1, cellHeight - padding * 2);
+  const padding = Math.max(1.5, cell * 0.18);
+  const cellDrawSize = Math.max(1, cell - padding * 2);
 
   for (let y = 0; y < rows; y += 1) {
     for (let x = 0; x < cols; x += 1) {
       const value = cells[y][x];
       const trail = trails[y][x];
-      const xPosition = left + x * cellWidth + padding;
-      const yPosition = top + y * cellHeight + padding;
+      const xPosition = left + x * cell + padding;
+      const yPosition = top + y * cell + padding;
 
       if (!value && trailEnabled && trail > 0) {
         ctx.fillStyle = accent;
         ctx.globalAlpha = trail * 0.22;
-        ctx.fillRect(xPosition, yPosition, cellDrawWidth, cellDrawHeight);
+        ctx.fillRect(xPosition, yPosition, cellDrawSize, cellDrawSize);
         ctx.globalAlpha = 1;
       }
 
@@ -274,7 +318,7 @@ function draw(now = performance.now()) {
         const age = Math.min(1, ages[y][x] / 18);
         ctx.fillStyle = alive;
         ctx.globalAlpha = 0.52 + age * 0.48;
-        ctx.fillRect(xPosition, yPosition, cellDrawWidth, cellDrawHeight);
+        ctx.fillRect(xPosition, yPosition, cellDrawSize, cellDrawSize);
         ctx.globalAlpha = 1;
       }
     }
@@ -287,13 +331,13 @@ function draw(now = performance.now()) {
 
     ctx.globalAlpha = alpha;
     ctx.fillStyle = effect.type === 'birth' ? alive : accent;
-    const xPosition = left + effect.x * cellWidth + padding - progress * 1.2;
-    const yPosition = top + effect.y * cellHeight + padding - progress * 1.2;
+    const xPosition = left + effect.x * cell + padding - progress * 1.2;
+    const yPosition = top + effect.y * cell + padding - progress * 1.2;
     ctx.fillRect(
       xPosition,
       yPosition,
-      Math.max(1, cellDrawWidth + progress * 2.4),
-      Math.max(1, cellDrawHeight + progress * 2.4),
+      Math.max(1, cellDrawSize + progress * 2.4),
+      Math.max(1, cellDrawSize + progress * 2.4),
     );
     ctx.globalAlpha = 1;
   });
@@ -303,8 +347,11 @@ function draw(now = performance.now()) {
 
 function drawChart() {
   if (!chart || !chartCtx) return;
-  const width = chart.clientWidth;
-  const height = chart.clientHeight;
+  // Draw in the bitmap's own coordinate space (bitmap / dpr); the element is
+  // CSS-sized (width:100%, clamped height), so the browser may scale it, but
+  // a smooth line chart resamples gracefully — unlike the pixel grid.
+  const width = chart.width / chartPixelRatio;
+  const height = chart.height / chartPixelRatio;
   if (!width || !height || !history.length) return;
 
   chartCtx.clearRect(0, 0, width, height);
@@ -487,11 +534,14 @@ function cellFromEvent(event) {
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return [-1, -1];
 
-  const normalizedX = (event.clientX - rect.left) / rect.width;
-  const normalizedY = (event.clientY - rect.top) / rect.height;
-  const gridX = (normalizedX - (1 - zoom) / 2) / zoom;
-  const gridY = (normalizedY - (1 - zoom) / 2) / zoom;
-  return [Math.floor(gridX * cols), Math.floor(gridY * rows)];
+  // Invert gridGeometry() exactly: element-relative pixel -> coordinate
+  // space -> grid cell. The element is pinned to the bitmap so the scale
+  // factor is 1, but mapping through the rect keeps clicks correct even if
+  // a future stylesheet ever clamps the element.
+  const { width, height, cell, left, top } = gridGeometry();
+  const x = (event.clientX - rect.left) * (width / rect.width);
+  const y = (event.clientY - rect.top) * (height / rect.height);
+  return [Math.floor((x - left) / cell), Math.floor((y - top) / cell)];
 }
 
 function finishDrawing(event) {
