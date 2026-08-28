@@ -52,10 +52,10 @@ let chartPixelRatio = 1;
 
 const themeColors = {
   dark: {
-    alive: '#c7f36a',
-    accent: '#60d7ed',
-    background: '#0a1020',
-    grid: 'rgba(108, 127, 170, 0.17)',
+    alive: '#00ff00',
+    accent: '#00ffff',
+    background: '#000000',
+    grid: 'rgba(255, 255, 255, 0.36)',
   },
   light: {
     alive: '#27734a',
@@ -72,7 +72,7 @@ const themeColors = {
 };
 
 const metaThemeColors = {
-  dark: '#090d1b',
+  dark: '#000000',
   light: '#edf4f1',
   contrast: '#000000',
 };
@@ -319,7 +319,7 @@ function drawChart() {
   if (!width || !height || !history.length) return;
 
   chartCtx.clearRect(0, 0, width, height);
-  chartCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--chart').trim() || '#60d7ed';
+  chartCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--chart').trim() || '#00ffff';
   chartCtx.fillStyle = chartCtx.strokeStyle;
   chartCtx.lineWidth = 1.5 / chartPixelRatio;
   chartCtx.lineJoin = 'round';

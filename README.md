@@ -9,5 +9,5 @@ Open `index.html` in a browser or serve the directory with any static web server
 - Choose glider and Gosper gun presets
 - Adjust simulation speed
 - Open Settings to choose responsive or fixed grid sizes, built-in patterns, and edge behavior
-- Switch between dark glass, light, and high-contrast themes
+- Switch between dark (green on black), light, and high-contrast themes
 - Keyboard shortcuts: Space to play/pause, R to randomize, C to clear
