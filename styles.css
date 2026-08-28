@@ -3,16 +3,24 @@
    ==========================================================================
    Layout contract (read before editing):
 
-   1. Breakpoints switch on viewport WIDTH (plus orientation for landscape
-      phones/tablets) — never on viewport height. Browser chrome differs
-      between browsers, so height-based queries made different browsers
-      disagree at the same window size.
-   2. The page scrolls whenever content is taller than the viewport.
-      `overflow: hidden` is only used inside the canvas frame, on text
-      that ellipsizes, and on <body> while the settings modal is open.
-   3. Every grid/flex child that can hold text or the canvas carries
+   1. The STRUCTURE only ever switches on viewport width and orientation —
+      never on viewport height. Browser chrome differs between browsers,
+      so height-based structural queries made Arc and Brave disagree at
+      the same window size.
+   2. Landscape viewports never scroll: the shell is locked to exactly one
+      viewport height and every rail size is a vh-driven clamp, so the
+      interface compresses fluidly on short windows instead of switching
+      layouts (see section 9). Height is used only for that fluid scaling
+      and for dropping purely decorative copy on very short windows —
+      never to choose a different layout structure.
+   3. Portrait viewports (and sub-500px landscape windows, which cannot
+      fit a rail) use the scrolling stacked layout from the base styles.
+   4. `overflow: hidden` is used on <body> in landscape (and while the
+      settings modal is open), inside the canvas frame, and on text that
+      ellipsizes — never to hide whole sections of the page.
+   5. Every grid/flex child that can hold text or the canvas carries
       `min-width: 0` so content can never blow out its track.
-   4. Every theme is defined in exactly ONE token block. Components only
+   6. Every theme is defined in exactly ONE token block. Components only
       consume tokens — no per-theme component colors.
    ========================================================================== */
 
@@ -694,12 +702,6 @@ a:focus-visible {
   background: var(--surface-hover);
 }
 
-.step-btn span {
-  margin-right: 5px;
-  font-size: 17px;
-  vertical-align: -1px;
-}
-
 .speed-row {
   display: flex;
   align-items: center;
@@ -984,6 +986,9 @@ input[type="range"] {
 .randomize-btn {
   width: 100%;
   min-width: 0;
+  /* Match the corner radius of the control cards and the settings card it
+     sits beside, so the rail reads as one unified set of tabs. */
+  border-radius: 11px;
   border: 1px solid var(--random-border);
   background: var(--random-bg);
   color: var(--cyan);
@@ -1005,6 +1010,9 @@ input[type="range"] {
 
 .page-footer {
   flex: 0 0 auto;
+  /* In scrolling layouts, pin the footer to the bottom of the viewport
+     whenever the content above happens to be shorter than it. */
+  margin-top: auto;
   padding-top: 24px;
 }
 
@@ -1434,43 +1442,118 @@ input[type="range"] {
 }
 
 /* --------------------------------------------------------------------------
-   9. Side-by-side workspace
+   9. Landscape: the interface always fits, never scrolls
    --------------------------------------------------------------------------
-   Desktop windows (>= 851px) and landscape phones/tablets (601–850px)
-   put the board beside a control rail. Orientation + width only — the
-   same window size always produces the same layout in every browser.
+   Any landscape viewport wide enough for a board plus a rail (>= 500px)
+   locks the whole app to one viewport height:
+
+   - html/body and .app-shell are exactly one viewport tall, with
+     overflow hidden, so no scrollbar can ever appear.
+   - The workspace flexes to fill the height left by the topbar, hero and
+     footer; the canvas frame absorbs whatever remains (aspect-ratio is
+     dropped — the grid renderer adapts its dimensions to the frame).
+   - Every rail size is a vh-driven clamp, so the rail compresses SMOOTHLY
+     as the window gets shorter. Nothing switches structure on height:
+     two browsers with slightly different chrome merely compress things
+     slightly differently. The rail also carries an overflow-y: auto
+     safety valve that only engages on absurdly short windows.
+   - Very short landscape windows drop purely decorative copy (the hero
+     intro, the footer, then the hero itself) — the board and its controls
+     are the product and always stay reachable.
+
+   Portrait viewports and sub-500px landscape windows keep the scrolling
+   stacked layout from the base styles.
    -------------------------------------------------------------------------- */
 
-@media (min-width: 851px),
-  (min-width: 601px) and (max-width: 850px) and (orientation: landscape) {
+@media (orientation: landscape) and (min-width: 500px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .app-shell {
+    height: 100%;
+    height: 100dvh;
+    min-height: 0;
+    padding-top: clamp(6px, 1.6vh, 28px);
+    padding-bottom: clamp(6px, 1.4vh, 20px);
+  }
+
   .hero {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 32px;
-    padding: clamp(40px, 5vw, 68px) 4px clamp(24px, 3vw, 42px);
+    padding: clamp(8px, 3vh, 56px) 4px clamp(6px, 2vh, 36px);
+  }
+
+  .eyebrow {
+    margin-bottom: clamp(4px, 1.2vh, 16px);
+    font-size: clamp(8px, 1.1vh, 11px);
   }
 
   .hero h1 {
-    font-size: clamp(46px, 6vw, 84px);
+    font-size: clamp(20px, min(5.5vw, 8.5vh), 84px);
   }
 
   .intro {
     max-width: 280px;
     margin: 0 5% 6px 0;
-    font-size: clamp(12px, 1.1vw, 14px);
+    font-size: clamp(10px, 1.5vh, 14px);
   }
 
   .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
-    align-items: start;
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, min(32vw, 340px));
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    gap: clamp(8px, 1.2vw, 24px);
   }
 
-  /* The rail is a compact two-column grid; the settings card joins the
-     Randomize action on the last row. */
+  .board-wrap {
+    min-height: 0;
+    padding: clamp(6px, 1.6vh, 15px) clamp(8px, 1.2vw, 15px)
+      clamp(5px, 1.4vh, 12px);
+  }
+
+  .board-toolbar,
+  .board-footer {
+    height: clamp(18px, 2.8vh, 26px);
+  }
+
+  .zoom-control {
+    height: clamp(19px, 2.9vh, 28px);
+    font-size: clamp(7px, 1vh, 9px);
+  }
+
+  .zoom-control button {
+    font-size: clamp(12px, 1.8vh, 16px);
+  }
+
+  .icon-btn {
+    padding: clamp(2px, 0.8vh, 5px) 7px;
+    font-size: clamp(13px, 1.9vh, 17px);
+  }
+
+  .fit-icon {
+    font-size: clamp(13px, 1.9vh, 18px);
+  }
+
+  .canvas-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    aspect-ratio: auto;
+    margin: clamp(4px, 1vh, 12px) 0 clamp(3px, 0.8vh, 10px);
+  }
+
   .controls {
+    min-height: 0;
+    overflow-y: auto; /* safety valve; content is sized to fit */
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    align-content: start;
+    gap: clamp(4px, 1.1vh, 9px);
   }
 
   .simulation-block { grid-column: 1; grid-row: 1; }
@@ -1489,100 +1572,112 @@ input[type="range"] {
   }
 
   .control-block {
-    padding: 13px 14px;
+    padding: clamp(5px, 1.6vh, 13px) clamp(7px, 1vw, 14px);
   }
 
   .section-head {
-    margin-bottom: 10px;
+    margin-bottom: clamp(4px, 1.1vh, 10px);
+    font-size: clamp(7px, 1vh, 10px);
   }
 
   .transport {
-    gap: 7px;
+    gap: clamp(4px, 0.6vw, 7px);
   }
 
   .primary-btn,
   .step-btn,
   .randomize-btn {
-    height: 36px;
-    font-size: 11px;
+    height: clamp(24px, 3.8vh, 36px);
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: clamp(9px, 1.2vh, 11px);
+    white-space: nowrap;
   }
 
   .speed-row {
-    margin: 12px 0 7px;
+    margin: clamp(3px, 1.2vh, 12px) 0 clamp(2px, 0.8vh, 7px);
+    font-size: clamp(8px, 1.1vh, 11px);
+  }
+
+  input[type="range"] {
+    height: clamp(10px, 1.6vh, 16px);
   }
 
   .presets-block {
-    padding-bottom: 8px;
+    padding-bottom: clamp(3px, 0.9vh, 8px);
   }
 
   /* Presets always render as a stable 2x2 palette beside the board. */
   .preset-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 3px;
+    gap: clamp(2px, 0.6vh, 3px);
   }
 
   .preset {
-    min-height: 40px;
+    min-height: clamp(24px, 3.6vh, 40px);
     gap: 7px;
-    padding: 5px 4px;
+    padding: clamp(2px, 0.7vh, 5px) 4px;
   }
 
   .preset b {
-    font-size: 10px;
+    font-size: clamp(8px, 1.1vh, 10px);
   }
 
   .preset small {
     margin-top: 0;
-    font-size: 8px;
+    font-size: clamp(6px, 0.9vh, 8px);
   }
 
   .pattern-icon {
-    width: 22px;
-    height: 22px;
-    flex-basis: 22px;
+    width: clamp(16px, 2.6vh, 22px);
+    height: clamp(16px, 2.6vh, 22px);
+    flex-basis: clamp(16px, 2.6vh, 22px);
     background-size: 6px 6px;
   }
 
   .stats-grid {
-    gap: 9px;
+    gap: clamp(6px, 1.2vw, 12px);
   }
 
   .stats-grid div + div {
-    padding-left: 9px;
+    padding-left: clamp(6px, 1.2vw, 12px);
   }
 
   .stats-grid strong {
-    font-size: 17px;
+    font-size: clamp(11px, 1.9vh, 17px);
   }
 
   .population-chart {
     display: block;
-    margin-top: 10px;
+    margin-top: clamp(4px, 1vh, 10px);
   }
 
   .population-chart canvas {
-    width: 100%;
-    height: 42px;
-    cursor: default;
-    image-rendering: auto;
+    height: clamp(14px, 4.2vh, 42px);
   }
 
   .appearance-block {
-    padding: 12px 14px;
+    padding: clamp(5px, 1.4vh, 12px) clamp(7px, 1vw, 14px);
   }
 
   .appearance-block .section-head {
-    margin-bottom: 9px;
+    margin-bottom: clamp(4px, 1vh, 9px);
   }
 
   .theme-btn {
-    min-height: 28px;
+    min-height: clamp(18px, 2.8vh, 28px);
+    font-size: clamp(7px, 1vh, 9px);
+  }
+
+  .toggle-row {
+    margin-top: clamp(3px, 0.9vh, 10px);
+    font-size: clamp(8px, 1.1vh, 11px);
   }
 
   .settings-desktop-trigger {
-    min-height: 36px;
-    padding: 8px 10px;
+    min-height: clamp(24px, 3.8vh, 36px);
+    padding: clamp(4px, 1vh, 8px) clamp(6px, 0.8vw, 10px);
   }
 
   .settings-button-copy small {
@@ -1590,35 +1685,31 @@ input[type="range"] {
   }
 
   .page-footer {
-    padding-top: 14px;
+    margin-top: 0;
+    padding-top: clamp(4px, 1.6vh, 24px);
   }
 }
 
-/* Full-size desktop: a wider rail, and the canvas frame is capped so the
-   whole interface stays inside the viewport on common screen heights. The
-   cap only ever SHRINKS the frame — the grid renderer adapts its
-   dimensions to whatever frame size it gets, and anything that still does
-   not fit simply scrolls. The footer is pinned to the bottom of the shell
-   so leftover space collects between it and the workspace. */
-@media (min-width: 851px) {
-  .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 335px);
-    align-items: start;
-  }
-
-  .canvas-frame {
-    max-height: max(300px, calc(100vh - 480px));
-    max-height: max(300px, calc(100dvh - 480px));
-  }
-
+/* Short landscape windows drop the decorative copy first. */
+@media (orientation: landscape) and (min-width: 500px) and (max-height: 540px) {
+  .intro,
   .page-footer {
-    margin-top: auto;
+    display: none;
   }
 }
 
-/* Landscape phones have short viewports; keep their rail as compact as
-   the stacked phone layout by leaving the chart out. */
-@media (min-width: 601px) and (max-width: 850px) and (orientation: landscape) {
+/* Very short landscape windows (phone landscape) drop the hero as well —
+   the board and its controls are the product. */
+@media (orientation: landscape) and (min-width: 500px) and (max-height: 400px) {
+  .hero {
+    display: none;
+  }
+}
+
+/* Extremely short windows give up the population chart too. Beyond this
+   point only sliver-sized windows remain; the rail's overflow-y safety
+   valve keeps every control reachable even there. */
+@media (orientation: landscape) and (min-width: 500px) and (max-height: 340px) {
   .population-chart {
     display: none;
   }

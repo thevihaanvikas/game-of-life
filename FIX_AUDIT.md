@@ -1,3 +1,45 @@
+# Layout & theme fix v4
+
+## What changed in v4
+
+### Landscape never scrolls
+
+The interface is now locked to the viewport in every landscape aspect
+ratio, while portrait keeps the comfortable scrolling layout:
+
+- `@media (orientation: landscape) and (min-width: 500px)` locks
+  `html`/`body`/`.app-shell` to exactly one viewport height with
+  `overflow: hidden`, so a scrollbar can never appear. (Landscape windows
+  narrower than 500px cannot fit a board plus a rail; they keep the
+  scrolling stacked layout.)
+- The workspace flexes to fill the height left by the topbar, hero and
+  footer, and the canvas frame absorbs whatever remains — its 8:5 aspect
+  ratio is dropped in landscape because the grid renderer adapts its
+  dimensions to any frame size.
+- Every rail size is a `vh`-driven `clamp()`, so the rail compresses
+  *smoothly* as the window gets shorter. No breakpoint switches layout
+  structure on height — two browsers with slightly different chrome
+  merely compress things slightly differently, so they can never
+  disagree about the structure the way Arc and Brave did in v2.
+- Purely decorative copy is dropped progressively on very short windows:
+  the hero intro and footer below 540px of height, the hero itself below
+  400px, and the population chart below 340px. The board and its controls
+  always stay visible. A `overflow-y: auto` safety valve on the rail keeps
+  every control reachable even on sliver-sized windows shorter than
+  ~270px.
+- Portrait viewports (and sub-500px landscape) are unchanged: stacked,
+  scrollable, 8:5 board.
+
+### Smaller fixes
+
+- The SIMULATION "Step" button is now "+1 gen" (with a tooltip), which
+  describes what it does.
+- The Randomize button's corner radius was raised from 5px to 11px to
+  match the control cards and the settings card it sits beside, so the
+  whole rail reads as one unified set of tabs.
+
+---
+
 # Layout & theme fix v3
 
 ## Root causes found in the previous stylesheet
@@ -31,7 +73,7 @@ defects that broke scaling:
 5. **`vh`-based `clamp()` for paddings and fonts**, so UI sizes varied
    with browser chrome.
 
-## What changed
+## What changed in v3
 
 - `styles.css` was rewritten as a single-source stylesheet:
   - Breakpoints use **width (and orientation) only** — never height.
