@@ -983,11 +983,19 @@ input[type="range"] {
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* Same hover treatment as the Randomize button it sits beside. */
+/* Hovering the Settings buttons adopts the main colour — the theme default
+   or whatever is chosen in the Settings colour picker (it overrides --lime
+   on <body>, so this follows the picker automatically). */
 .settings-trigger:hover,
 .settings-desktop-trigger:hover {
-  border-color: var(--line-strong);
+  border-color: var(--lime);
   background: var(--surface-hover);
+  color: var(--lime);
+}
+
+.settings-desktop-trigger:hover .settings-button-icon,
+.settings-desktop-trigger:hover .settings-button-copy b {
+  color: var(--lime);
 }
 
 .settings-button-icon {

@@ -32,7 +32,7 @@ const MIN_ROWS = 20;
 const MAX_COLS = 160;
 const MAX_ROWS = 100;
 let cells = makeGrid();
-let ages = makeGrid();
+let bornAt = makeTimeGrid();
 let trails = makeTrailGrid();
 let running = false;
 let generation = 0;
@@ -57,22 +57,31 @@ const themeColors = {
     accent: '#00ffff',
     background: '#000000',
     grid: 'rgba(255, 255, 255, 0.36)',
-    // Freshly-born cells blend from near-white toward the alive colour.
-    fresh: '#ffffff',
+    // Birth tint leans toward white: a cell is painted in a lighter shade
+    // of the alive colour, then settles into the alive colour.
+    birthExtreme: '#ffffff',
   },
   light: {
     alive: '#00b300',
     accent: '#16718a',
     background: '#ffffff',
     grid: 'rgba(0, 0, 0, 0.36)',
-    // Mirror of dark: fresh cells blend from near-black toward the colour.
-    fresh: '#000000',
+    // Mirror of dark: the birth tint leans toward black — a darker shade.
+    birthExtreme: '#000000',
   },
 };
 
-const AGE_RAMP_STEPS = 18;
+// Painting effect: a cell appears in a lighter shade of the alive colour
+// (dark theme) or a darker shade (light theme) and settles into the alive
+// colour over a fraction of a second of WALL-CLOCK time — whether or not
+// the simulation is running. Pure painting feedback, not a survival cue.
+const BIRTH_TINT_AMOUNT = 0.45;
+const BIRTH_SETTLE_MS = 320;
+const BIRTH_RAMP_STEPS = 24;
 let cellColorRamp = [];
 let cellColorRampKey = '';
+let lastBirthAt = 0;
+let settleFrame = 0;
 
 function hexToRgb(hex) {
   const value = hex.replace('#', '');
@@ -83,19 +92,44 @@ function hexToRgb(hex) {
   ];
 }
 
-function buildCellColorRamp(alive, fresh) {
-  const [aliveR, aliveG, aliveB] = hexToRgb(alive);
-  const [freshR, freshG, freshB] = hexToRgb(fresh);
+function rgbString(rgb) {
+  return `rgb(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])})`;
+}
+
+function mixRgb(a, b, t) {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+function buildCellColorRamp(alive, extreme) {
+  // ramp[0] = birth shade (alive colour shifted toward the theme extreme),
+  // ramp[last] = the alive colour itself.
+  const aliveRgb = hexToRgb(alive);
+  const tint = mixRgb(aliveRgb, hexToRgb(extreme), BIRTH_TINT_AMOUNT);
   const ramp = [];
-  for (let step = 0; step <= AGE_RAMP_STEPS; step += 1) {
-    const progress = step / AGE_RAMP_STEPS;
-    ramp.push(
-      `rgb(${Math.round(freshR + (aliveR - freshR) * progress)}, ` +
-      `${Math.round(freshG + (aliveG - freshG) * progress)}, ` +
-      `${Math.round(freshB + (aliveB - freshB) * progress)})`,
-    );
+  for (let step = 0; step <= BIRTH_RAMP_STEPS; step += 1) {
+    ramp.push(rgbString(mixRgb(tint, aliveRgb, step / BIRTH_RAMP_STEPS)));
   }
   return ramp;
+}
+
+function markBirth(x, y, time = performance.now()) {
+  bornAt[y][x] = time;
+  if (time > lastBirthAt) lastBirthAt = time;
+}
+
+function scheduleSettleAnimation() {
+  // Redraw on animation frames until every birth tint has settled. Painted
+  // cells and evolution births are already covered by the effects loop;
+  // bulk loads (presets, random fields) schedule this directly.
+  if (settleFrame) return;
+  const tick = () => {
+    settleFrame = 0;
+    draw();
+    if (performance.now() - lastBirthAt < BIRTH_SETTLE_MS + 80) {
+      settleFrame = requestAnimationFrame(tick);
+    }
+  };
+  settleFrame = requestAnimationFrame(tick);
 }
 
 const metaThemeColors = {
@@ -134,6 +168,11 @@ function makeGrid() {
   return Array.from({ length: rows }, () => new Uint16Array(cols));
 }
 
+function makeTimeGrid() {
+  // Wall-clock birth timestamps (Float64; 0 = born long ago / settled).
+  return Array.from({ length: rows }, () => new Float64Array(cols));
+}
+
 function makeTrailGrid() {
   return Array.from({ length: rows }, () => new Float32Array(cols));
 }
@@ -148,10 +187,10 @@ function resizeGrid(nextCols, nextRows) {
   const previousCols = cols;
   const previousRows = rows;
   const previousCells = cells;
-  const previousAges = ages;
+  const previousBornAt = bornAt;
   const previousTrails = trails;
   const nextCells = Array.from({ length: nextRows }, () => new Uint16Array(nextCols));
-  const nextAges = Array.from({ length: nextRows }, () => new Uint16Array(nextCols));
+  const nextBornAt = Array.from({ length: nextRows }, () => new Float64Array(nextCols));
   const nextTrails = Array.from({ length: nextRows }, () => new Float32Array(nextCols));
 
   // Resize around the centre of the world. Existing cells are mapped by their
@@ -162,7 +201,7 @@ function resizeGrid(nextCols, nextRows) {
       const targetX = Math.min(nextCols - 1, Math.round(x * (nextCols - 1) / Math.max(1, previousCols - 1)));
       const targetY = Math.min(nextRows - 1, Math.round(y * (nextRows - 1) / Math.max(1, previousRows - 1)));
       nextCells[targetY][targetX] = Math.max(nextCells[targetY][targetX], previousCells[y][x]);
-      nextAges[targetY][targetX] = Math.max(nextAges[targetY][targetX], previousAges[y][x]);
+      nextBornAt[targetY][targetX] = Math.max(nextBornAt[targetY][targetX], previousBornAt[y][x]);
       nextTrails[targetY][targetX] = Math.max(nextTrails[targetY][targetX], previousTrails[y][x]);
     }
   }
@@ -170,7 +209,7 @@ function resizeGrid(nextCols, nextRows) {
   cols = nextCols;
   rows = nextRows;
   cells = nextCells;
-  ages = nextAges;
+  bornAt = nextBornAt;
   trails = nextTrails;
   updateGridReadout();
 }
@@ -302,10 +341,10 @@ function draw(now = performance.now()) {
   const { width, height, cell, left, top } = gridGeometry();
   if (!width || !height) return;
 
-  const { alive, accent, background, grid, fresh } = colorsForTheme();
-  const rampKey = alive + fresh;
+  const { alive, accent, background, grid, birthExtreme } = colorsForTheme();
+  const rampKey = alive + birthExtreme;
   if (cellColorRampKey !== rampKey) {
-    cellColorRamp = buildCellColorRamp(alive, fresh);
+    cellColorRamp = buildCellColorRamp(alive, birthExtreme);
     cellColorRampKey = rampKey;
   }
   ctx.clearRect(0, 0, width, height);
@@ -360,11 +399,17 @@ function draw(now = performance.now()) {
       }
 
       if (value) {
-        // Freshly-born cells render near-white (dark theme) or near-black
-        // (light theme) with a tint of the alive colour, then settle into
-        // the alive colour as they survive — far more prominent than the
-        // old alpha fade.
-        ctx.fillStyle = cellColorRamp[Math.min(AGE_RAMP_STEPS, ages[y][x])];
+        // Painting effect: freshly-born cells start in a lighter/darker
+        // shade of the alive colour and settle into it over a moment of
+        // wall-clock time — even while the simulation is paused.
+        const settle = (now - bornAt[y][x]) / BIRTH_SETTLE_MS;
+        if (settle < 1) {
+          const eased = 1 - (1 - settle) * (1 - settle); // ease-out
+          ctx.fillStyle =
+            cellColorRamp[Math.min(BIRTH_RAMP_STEPS, Math.floor(eased * (BIRTH_RAMP_STEPS + 1)))];
+        } else {
+          ctx.fillStyle = alive;
+        }
         ctx.fillRect(xPosition, yPosition, cellDrawSize, cellDrawSize);
       }
     }
@@ -455,7 +500,7 @@ function cellIsAlive(x, y) {
 
 function evolve() {
   const next = makeGrid();
-  const nextAges = makeGrid();
+  const nextBornAt = makeTimeGrid();
   const nextTrails = makeTrailGrid();
   const changedAt = performance.now();
 
@@ -475,7 +520,7 @@ function evolve() {
       next[y][x] = born || survives ? 1 : 0;
 
       if (next[y][x]) {
-        nextAges[y][x] = cells[y][x] ? Math.min(65535, ages[y][x] + 1) : 1;
+        nextBornAt[y][x] = cells[y][x] ? bornAt[y][x] : changedAt;
       }
 
       if (!next[y][x] && cells[y][x]) {
@@ -490,7 +535,7 @@ function evolve() {
   }
 
   cells = next;
-  ages = nextAges;
+  bornAt = nextBornAt;
   trails = nextTrails;
   generation += 1;
   recordPopulation();
@@ -514,7 +559,7 @@ function setRunning(value) {
 
 function resetState() {
   cells = makeGrid();
-  ages = makeGrid();
+  bornAt = makeTimeGrid();
   trails = makeTrailGrid();
   effects = [];
   generation = 0;
@@ -526,14 +571,15 @@ function selectPreset(name) {
   });
 }
 
-function place(pattern, offsetX, offsetY) {
+function place(pattern, offsetX, offsetY, stamp = 0) {
   pattern.forEach((line, y) => {
     [...line].forEach((value, x) => {
       const targetX = x + offsetX;
       const targetY = y + offsetY;
       if (value === '1' && targetY >= 0 && targetY < rows && targetX >= 0 && targetX < cols) {
         cells[targetY][targetX] = 1;
-        ages[targetY][targetX] = 1;
+        bornAt[targetY][targetX] = stamp;
+        if (stamp > lastBirthAt) lastBirthAt = stamp;
       }
     });
   });
@@ -543,19 +589,21 @@ function loadPattern(name) {
   setRunning(false);
   resetState();
 
+  const stamp = performance.now();
   if (name === 'glider') {
-    place(patterns.glider, Math.floor(cols / 2) - 1, Math.floor(rows / 2) - 1);
+    place(patterns.glider, Math.floor(cols / 2) - 1, Math.floor(rows / 2) - 1, stamp);
   } else if (name === 'gun') {
-    place(patterns.gun, 2, Math.floor(rows / 2) - 4);
+    place(patterns.gun, 2, Math.floor(rows / 2) - 4, stamp);
   } else if (name === 'random') {
     for (let y = 0; y < rows; y += 1) {
       for (let x = 0; x < cols; x += 1) {
         if (Math.random() < 0.27) {
           cells[y][x] = 1;
-          ages[y][x] = 1;
+          bornAt[y][x] = stamp;
         }
       }
     }
+    if (stamp > lastBirthAt) lastBirthAt = stamp;
   }
 
   history = [population()];
@@ -563,13 +611,15 @@ function loadPattern(name) {
   statusText.textContent = name === 'blank' ? 'Ready to evolve' : 'Pattern loaded';
   draw();
   drawChart();
+  if (name !== 'blank') scheduleSettleAnimation();
 }
 
 function paintCell(x, y, value) {
   if (x < 0 || x >= cols || y < 0 || y >= rows || cells[y][x] === value) return false;
 
   cells[y][x] = value ? 1 : 0;
-  ages[y][x] = value ? 1 : 0;
+  if (value) markBirth(x, y);
+  else bornAt[y][x] = 0;
   trails[y][x] = 0;
   addEffect(x, y, value ? 'birth' : 'death');
   return true;

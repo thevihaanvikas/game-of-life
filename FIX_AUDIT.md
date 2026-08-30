@@ -1,3 +1,30 @@
+# Birth tint as a painting effect v10 (corrects v9)
+
+v9 misunderstood the request: it tied cell colour to survival age
+(generations) and used near-white/near-black birth shades. What was
+actually wanted is a **painting effect** on wall-clock time:
+
+- A cell appears in a **lighter shade of the main colour** (dark theme)
+  or a **darker shade** (light theme) — e.g. light green `rgb(115,255,115)`
+  settling to `#00ff00` in dark mode, dark green `rgb(0,98,0)` settling
+  to `#00b300` in light mode — and settles into the true colour over
+  **320 ms**, with an ease-out, whether or not the simulation is
+  running. The generation-based `ages` grid is gone entirely, replaced
+  by `bornAt` wall-clock timestamps (migrated centre-stably on grid
+  resize, reset on death).
+- The tint applies to every birth: painted cells, evolution births, and
+  preset/random loads (which bloom in). Painted and evolved cells are
+  animated by the existing effects loop; bulk loads schedule a small
+  dedicated settle animator, which terminates once everything has
+  settled.
+- The ramp follows the theme **and** the custom main colour from the
+  Settings picker, cached per colour pair.
+- **Settings button hover now adopts the main colour** (border, icon,
+  label — `var(--lime)`, which the picker overrides on `<body>`),
+  instead of the neutral Randomize-style treatment from v9.
+
+---
+
 # Age colour ramp, system theme & settings polish v9
 
 - **Prominent cell-age effect**: the old 82%→100% opacity fade was too
