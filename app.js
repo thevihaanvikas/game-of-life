@@ -188,6 +188,8 @@ const patterns = {
   lwss: ['01001', '10000', '10001', '11110'],
   penta: ['0010000100', '1101111011', '0010000100'],
   rpentomino: ['011', '110', '010'],
+  acorn: ['0100000', '0001000', '1100111'],
+  diehard: ['00000010', '11000000', '01000111'],
   gun: [
     '000000000000000000000000000000100000',
     '000000000000000000000000000010100000',
@@ -644,6 +646,10 @@ function loadPattern(name) {
     place(patterns.penta, Math.floor(cols / 2) - 5, Math.floor(rows / 2) - 1, stamp);
   } else if (name === 'rpentomino') {
     place(patterns.rpentomino, Math.floor(cols / 2) - 1, Math.floor(rows / 2) - 1, stamp);
+  } else if (name === 'acorn') {
+    place(patterns.acorn, Math.floor(cols / 2) - 3, Math.floor(rows / 2) - 1, stamp);
+  } else if (name === 'diehard') {
+    place(patterns.diehard, Math.floor(cols / 2) - 4, Math.floor(rows / 2) - 1, stamp);
   } else if (name === 'random') {
     for (let y = 0; y < rows; y += 1) {
       for (let x = 0; x < cols; x += 1) {

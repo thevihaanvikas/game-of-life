@@ -738,8 +738,14 @@ input[type="range"] {
 }
 
 .lwss-pattern svg rect,
-.rpentomino-pattern svg rect {
+.rpentomino-pattern svg rect,
+.diehard-pattern svg rect,
+.diehard-pattern svg circle {
   fill: var(--cyan);
+}
+
+.acorn-pattern svg rect {
+  fill: var(--cell-alive);
 }
 
 /* "More presets" expander — only visible where the settings control is the
@@ -775,9 +781,33 @@ input[type="range"] {
   transform: rotate(180deg);
 }
 
-/* Collapsed (default): only the first four presets show. */
-.preset-list:not(.open) .preset.extra {
-  display: none;
+/* Collapsed (default): the extra presets are clipped to zero height and
+   pulled tight against the row above ( cancelling the list gap), so the
+   closed list reads exactly as it did before the wrapper existed. */
+.preset-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  grid-column: 1 / -1;
+  margin-top: -3px;
+  visibility: hidden;
+  transition: grid-template-rows 0.35s ease, margin-top 0.35s ease,
+    visibility 0.35s;
+}
+
+.preset-more-inner {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+/* Expanded: the wrapper grows to its natural height — the grid-rows trick
+   animates smoothly without measuring anything in JS. */
+.preset-list.open .preset-more {
+  grid-template-rows: 1fr;
+  margin-top: 0;
+  visibility: visible;
 }
 
 .stats-block {
@@ -1443,6 +1473,16 @@ input[type="range"] {
     grid-column: 1 / -1;
     min-height: 30px;
   }
+
+  .preset-more {
+    margin-top: -4px;
+  }
+
+  .preset-more-inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
 }
 
 /* Very narrow phones: a single control column. `1 / -1` spans collapse to
@@ -1645,8 +1685,11 @@ input[type="range"] {
     gap: clamp(2px, 0.6vh, 3px);
   }
 
-  .preset-list:not(.open) .preset.extra {
-    display: flex;
+  /* The animated wrapper goes layout-transparent here: every preset
+     becomes a direct child of the two-column palette, always visible. */
+  .preset-more,
+  .preset-more-inner {
+    display: contents;
   }
 
   .more-presets {

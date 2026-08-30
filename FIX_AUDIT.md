@@ -1,3 +1,25 @@
+# Swatch colours, preset expansion animation, two more presets v13
+
+- **Swatch buttons now show their colours** — each carries its hex as
+  an inline background (they previously had no background at all and
+  rendered as empty bordered squares).
+- **Smooth preset expansion**: the extra presets moved into a
+  `.preset-more` wrapper animated with the `grid-template-rows:
+  0fr → 1fr` trick (no JS measuring). Closed state pulls the wrapper
+  tight against the row above with a negative margin that cancels the
+  list gap, `visibility: hidden` keeps collapsed presets out of the
+  tab order, and in landscape both wrappers become `display: contents`
+  so every preset is a direct child of the two-column palette. The
+  global reduced-motion rule neutralises the transition.
+- **Two new presets** (library now eight, still even): **Acorn** — the
+  7-cell methuselah that grows for 5,206 generations — and **Diehard**,
+  which vanishes completely at generation 130. Verified in the harness:
+  exact cell counts for all eight presets, Diehard's population
+  reaching zero at exactly generation 130, and the Acorn's growth past
+  50 cells within 100 generations.
+
+---
+
 # More presets, swatches, reduced motion v12
 
 - **Preset library expanded to six** (even count, 2-per-row friendly):
