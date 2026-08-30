@@ -58,16 +58,20 @@ const themeColors = {
     background: '#000000',
     grid: 'rgba(255, 255, 255, 0.36)',
     // Birth tint leans toward white: a cell is painted in a lighter shade
-    // of the alive colour, then settles into the alive colour.
+    // of the alive colour, then settles into the alive colour. The strong
+    // lean makes the painting effect clearly visible against black.
     birthExtreme: '#ffffff',
+    birthTintAmount: 0.7,
   },
   light: {
     alive: '#00b300',
     accent: '#16718a',
     background: '#ffffff',
     grid: 'rgba(0, 0, 0, 0.36)',
-    // Mirror of dark: the birth tint leans toward black — a darker shade.
+    // Mirror of dark: the birth tint leans toward black — a darker shade,
+    // but only a little, so it never reads as a black cell on white.
     birthExtreme: '#000000',
+    birthTintAmount: 0.52,
   },
 };
 
@@ -75,7 +79,7 @@ const themeColors = {
 // (dark theme) or a darker shade (light theme) and settles into the alive
 // colour over a fraction of a second of WALL-CLOCK time — whether or not
 // the simulation is running. Pure painting feedback, not a survival cue.
-const BIRTH_TINT_AMOUNT = 0.45;
+// The lean amount itself is per theme (see birthTintAmount above).
 const BIRTH_SETTLE_MS = 320;
 const BIRTH_RAMP_STEPS = 24;
 let cellColorRamp = [];
@@ -100,11 +104,11 @@ function mixRgb(a, b, t) {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
-function buildCellColorRamp(alive, extreme) {
+function buildCellColorRamp(alive, extreme, amount) {
   // ramp[0] = birth shade (alive colour shifted toward the theme extreme),
   // ramp[last] = the alive colour itself.
   const aliveRgb = hexToRgb(alive);
-  const tint = mixRgb(aliveRgb, hexToRgb(extreme), BIRTH_TINT_AMOUNT);
+  const tint = mixRgb(aliveRgb, hexToRgb(extreme), amount);
   const ramp = [];
   for (let step = 0; step <= BIRTH_RAMP_STEPS; step += 1) {
     ramp.push(rgbString(mixRgb(tint, aliveRgb, step / BIRTH_RAMP_STEPS)));
@@ -341,10 +345,10 @@ function draw(now = performance.now()) {
   const { width, height, cell, left, top } = gridGeometry();
   if (!width || !height) return;
 
-  const { alive, accent, background, grid, birthExtreme } = colorsForTheme();
-  const rampKey = alive + birthExtreme;
+  const { alive, accent, background, grid, birthExtreme, birthTintAmount } = colorsForTheme();
+  const rampKey = alive + birthExtreme + String(birthTintAmount);
   if (cellColorRampKey !== rampKey) {
-    cellColorRamp = buildCellColorRamp(alive, birthExtreme);
+    cellColorRamp = buildCellColorRamp(alive, birthExtreme, birthTintAmount);
     cellColorRampKey = rampKey;
   }
   ctx.clearRect(0, 0, width, height);

@@ -1,3 +1,14 @@
+# Tint strength tuning v11
+
+The birth tint's lean toward the theme extreme is now **per theme**:
+dark mode leans 70% toward white (birth shade `rgb(179,255,179)`
+settling to `#00ff00` — a much stronger painting effect, still clearly
+green rather than near-white), light mode leans 52% toward black
+(`rgb(0,86,0)` settling to `#00b300` — only a little darker than
+v10's `rgb(0,98,0)`). Custom main colours follow the same amounts.
+
+---
+
 # Birth tint as a painting effect v10 (corrects v9)
 
 v9 misunderstood the request: it tied cell colour to survival age
