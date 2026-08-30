@@ -1,3 +1,25 @@
+# Landscape preset visibility + rail height v14
+
+- **Extra presets were invisible in landscape**: the collapsed-state
+  `visibility: hidden` on `.preset-more` **inherits through
+  `display: contents`** — the wrapper generates no box in landscape,
+  but its computed visibility still cascades to the preset buttons,
+  which were therefore laid out in the palette yet invisible (the
+  expander's portrait-only path worked, which is why resizing narrow
+  "fixed" it). The landscape rule now resets `visibility: visible`
+  explicitly on both wrappers.
+- **Rail height now matches the board**: the rail already stretched to
+  the workspace row, but `align-content: start` left its cards
+  clustered at the top with dead space below. In landscape the rail's
+  grid rows now `align-content: stretch`, so the control cards share
+  the extra height and the rail spans exactly the board's dynamic
+  height; the Randomize/Settings pair anchors to the bottom of its
+  track (`align-self: end`) so it sits flush with the rail's bottom
+  edge. The overflow safety valve still covers absurdly short windows,
+  and portrait keeps its natural stacked layout.
+
+---
+
 # Swatch colours, preset expansion animation, two more presets v13
 
 - **Swatch buttons now show their colours** — each carries its hex as

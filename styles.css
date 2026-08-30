@@ -1622,7 +1622,11 @@ input[type="range"] {
     min-height: 0;
     overflow-y: auto; /* safety valve; content is sized to fit */
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-content: start;
+    /* Rows share the extra height, so the rail's cards span exactly the
+       same height as the board column beside them (which itself flexes
+       with the viewport). Falls back to natural heights when the content
+       already fills the rail. */
+    align-content: stretch;
     gap: clamp(4px, 1.1vh, 9px);
   }
 
@@ -1686,10 +1690,15 @@ input[type="range"] {
   }
 
   /* The animated wrapper goes layout-transparent here: every preset
-     becomes a direct child of the two-column palette, always visible. */
+     becomes a direct child of the two-column palette, always visible.
+     visibility must be reset explicitly — it inherits through
+     display: contents, so the base collapsed-state hidden would
+     otherwise render these presets invisible even though they occupy
+     grid cells. */
   .preset-more,
   .preset-more-inner {
     display: contents;
+    visibility: visible;
   }
 
   .more-presets {
@@ -1772,6 +1781,10 @@ input[type="range"] {
     /* min-height: 0 cancels the trigger's base 44px, which would otherwise
        beat the fixed height and keep the pair mismatched. */
     min-height: 0;
+    /* With the rail rows stretching to match the board's height, anchor the
+       button pair to the bottom of their track so the pair sits flush with
+       the rail's (and board's) bottom edge. */
+    align-self: end;
     padding: 0 clamp(6px, 0.8vw, 10px);
   }
 
