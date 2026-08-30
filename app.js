@@ -165,6 +165,30 @@ const faviconByTheme = {
 // theme default"; a value overrides --lime / --cell-alive, the canvas alive
 // colour and the favicon for BOTH themes, and survives reloads.
 const MAIN_COLOR_KEY = 'game-of-life:main-color';
+
+// Session preferences (theme, speed, trail mode, edge behavior) persist
+// alongside the main colour so a returning visitor gets their own setup
+// back. The main colour keeps its own key for backwards compatibility.
+const PREFS_KEY = 'game-of-life:prefs';
+
+function readPrefs() {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    return {}; // storage unavailable or corrupted — defaults apply
+  }
+}
+
+function writePrefs(updates) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ ...readPrefs(), ...updates }));
+  } catch (error) {
+    // Storage unavailable (private mode): settings apply for this
+    // session, they just won't survive a reload.
+  }
+}
 const defaultAliveByTheme = { dark: '#00ff00', light: '#00b300' };
 // The secondary accent (canvas trails, death ripples) follows a custom main
 // colour too, so the whole site re-themes — not just the green elements.
@@ -765,6 +789,7 @@ document.getElementById('randomizeBtn').addEventListener('click', () => loadPatt
 
 speedRange.addEventListener('input', () => {
   speedValue.textContent = `${speedRange.value} gen/s`;
+  writePrefs({ speed: Number(speedRange.value) });
   if (running) setRunning(true);
 });
 
@@ -812,6 +837,7 @@ settingsClose.addEventListener('click', () => setSettingsOpen(false));
 settingsBackdrop.addEventListener('click', () => setSettingsOpen(false));
 boundaryModeSelect.addEventListener('change', (event) => {
   boundaryMode = event.target.value === 'bounded' ? 'bounded' : 'wrap';
+  writePrefs({ boundary: boundaryMode });
 });
 
 document.getElementById('fitBtn').addEventListener('click', () => {
@@ -926,7 +952,12 @@ function applyTheme(theme) {
 }
 
 document.querySelectorAll('.theme-btn').forEach((button) => {
-  button.addEventListener('click', () => applyTheme(button.dataset.theme));
+  button.addEventListener('click', () => {
+    applyTheme(button.dataset.theme);
+    // Saved on explicit clicks only — the boot-time theme (system
+    // preference or stored value) must not overwrite the user's choice.
+    writePrefs({ theme: button.dataset.theme });
+  });
 });
 
 mainColorInput?.addEventListener('input', (event) => {
@@ -953,6 +984,7 @@ colorSwatchButtons.forEach((button) => {
 
 document.getElementById('trailToggle').addEventListener('change', (event) => {
   trailEnabled = event.target.checked;
+  writePrefs({ trail: event.target.checked });
   draw();
 });
 
@@ -985,16 +1017,38 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+// Restore saved preferences before the first paint. Anything absent or
+// invalid falls back to the same defaults a first-time visitor gets.
+const storedPrefs = readPrefs();
+
+if (storedPrefs.boundary === 'bounded' || storedPrefs.boundary === 'wrap') {
+  boundaryMode = storedPrefs.boundary;
+  boundaryModeSelect.value = storedPrefs.boundary;
+}
+if (typeof storedPrefs.trail === 'boolean') {
+  trailEnabled = storedPrefs.trail;
+  document.getElementById('trailToggle').checked = storedPrefs.trail;
+}
+if (Number.isFinite(storedPrefs.speed)) {
+  speedRange.value = String(Math.min(20, Math.max(1, Math.round(storedPrefs.speed))));
+}
+
 updateGridReadout();
 speedValue.textContent = `${speedRange.value} gen/s`;
 updateZoom();
 setSettingsOpen(false);
-// Start on the system theme; the user's explicit choice (this session)
-// always wins afterwards.
+// Theme priority: an explicitly saved choice first (it survives
+// reloads), then the system preference for a first visit, then dark.
 const systemPrefersLight =
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-color-scheme: light)').matches;
-applyTheme(systemPrefersLight ? 'light' : 'dark');
+const savedTheme =
+  storedPrefs.theme === 'light' || storedPrefs.theme === 'dark'
+    ? storedPrefs.theme
+    : systemPrefersLight
+      ? 'light'
+      : 'dark';
+applyTheme(savedTheme);
 
 let storedMainColor = null;
 try {

@@ -1,3 +1,37 @@
+# Ship prep v18
+
+- **Touch-aware painting hints**: the board footer hint and the empty
+  state now swap wording on touch-primary devices via the same
+  `(hover: none) and (pointer: coarse)` query that hides the keycaps —
+  phones/tablets see "drag to paint" and "Tap or drag across the grid",
+  PCs keep "drag to paint · right-drag erases" / "Click or drag…".
+  Bonus fix: on ≤600px screens the hint was hidden but its "·"
+  separator was left dangling beside the grid size; both now hide
+  together.
+- **Settings persist across visits**: theme, speed, trail mode and
+  edge behavior are saved (`game-of-life:prefs`, one JSON object,
+  try/catch-guarded for private mode) the moment they change, and
+  restored before the first paint. Theme priority: an explicitly saved
+  choice, then the system preference (first visit), then dark — the
+  boot path is strictly read-only, so it never overwrites the stored
+  prefs. The main colour keeps its own pre-existing key. Invalid or
+  corrupt stored values fall back to defaults; speed is clamped to
+  1–20.
+- **Share-ready head**: meta description plus Open Graph + Twitter
+  card tags pointing at the live GitHub Pages URL, with a real
+  1200×630 `og-image.png` — a screenshot of the app itself (dark
+  theme, brand fonts loaded from local woff2, Gosper gun at gen ~100
+  with gliders streaming and the population chart live). Regenerate
+  the image if the design changes significantly.
+- Verified in real Chromium (harness deleted after passing): hint
+  wording on PC / tablet / phone, no dangling separator, all four
+  settings saved + restored + boot-never-overwrites, main-colour
+  persistence regression, meta tag values, PNG dimensions, and the
+  v17 layout regressions (gap equality, rail == board height, no
+  page scroll, keycaps).
+
+---
+
 # Finishing touches v17
 
 - **Keyboard hints are PC-only**: a `(hover: none) and (pointer: coarse)`

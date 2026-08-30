@@ -575,13 +575,25 @@ a:focus-visible {
   letter-spacing: 0.08em;
 }
 
+/* PC-only wording (right-drag erase, "Click") swaps out on touch-primary
+   devices exactly like the keyboard keycaps do. The base rule must come
+   BEFORE the media block: same specificity, so source order decides. */
+.touch-only {
+  display: none;
+}
+
 /* Keyboard hints only make sense where a keyboard exists: touch-primary
    devices (phones, tablets) never show them. Touchscreen laptops keep
    the hints — their primary pointer stays fine, and they have keys. */
 @media (hover: none) and (pointer: coarse) {
   .kbd,
-  .randomize-btn kbd {
+  .randomize-btn kbd,
+  .pc-only {
     display: none;
+  }
+
+  .touch-only {
+    display: inline;
   }
 }
 
@@ -1430,7 +1442,10 @@ input[type="range"]::-moz-range-thumb {
     font-size: 8px;
   }
 
-  .size-readout span:last-child {
+  /* Hide the painting hint and its separator together — hiding the hint
+     alone used to leave a dangling "·" beside the grid size. */
+  .size-readout .paint-hint,
+  .size-readout .sep {
     display: none;
   }
 
