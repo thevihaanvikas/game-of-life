@@ -22,6 +22,8 @@ const settingsDesktopTrigger = document.getElementById('settingsDesktopTrigger')
 const settingsPanel = document.getElementById('settingsPanel');
 const settingsBackdrop = document.getElementById('settingsBackdrop');
 const settingsClose = document.getElementById('settingsClose');
+const mainColorInput = document.getElementById('mainColor');
+const mainColorResetBtn = document.getElementById('mainColorReset');
 
 let cols = 48;
 let rows = 30;
@@ -74,6 +76,13 @@ const faviconByTheme = {
   dark: 'favicon.svg',
   light: 'favicon-light.svg',
 };
+
+// Custom main colour (set from the Settings panel). `null` means "use the
+// theme default"; a value overrides --lime / --cell-alive, the canvas alive
+// colour and the favicon for BOTH themes, and survives reloads.
+const MAIN_COLOR_KEY = 'game-of-life:main-color';
+const defaultAliveByTheme = { dark: '#00ff00', light: '#00b300' };
+let customMainColor = null;
 
 const patterns = {
   glider: ['010', '001', '111'],
@@ -661,6 +670,70 @@ document.getElementById('zoomIn').addEventListener('click', () => {
   draw();
 });
 
+function inkForColor(color) {
+  // Black or white text on the primary button, whichever stays readable on
+  // the chosen colour (defaults resolve to black, exactly as before).
+  const hex = color.slice(1);
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.45 ? '#000000' : '#ffffff';
+}
+
+function faviconSvgUrl(color) {
+  // The favicon glyph from favicon.svg / favicon-light.svg, recoloured on
+  // the fly and served as a data URI so the tab icon follows the picker.
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 37 37">` +
+    `<g transform="rotate(45 12.5 12.5)" fill="${color}">` +
+    `<rect width="6.333" height="6.333" rx="1" opacity=".45"/>` +
+    `<rect x="9.333" width="6.333" height="6.333" rx="1"/>` +
+    `<rect x="9.333" y="9.333" width="6.333" height="6.333" rx="1"/>` +
+    `<rect x="18.666" y="18.666" width="6.333" height="6.333" rx="1"/>` +
+    `</g></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function updateFavicon() {
+  faviconLink?.setAttribute(
+    'href',
+    customMainColor ? faviconSvgUrl(customMainColor) : faviconByTheme[currentTheme()],
+  );
+}
+
+function applyMainColor(color, { persist = true } = {}) {
+  customMainColor = color;
+  if (persist) {
+    try {
+      if (color) localStorage.setItem(MAIN_COLOR_KEY, color);
+      else localStorage.removeItem(MAIN_COLOR_KEY);
+    } catch (error) {
+      // Storage unavailable (private mode): the pick applies for this
+      // session, it just won't survive a reload.
+    }
+  }
+
+  const bodyStyle = document.body.style;
+  if (color) {
+    bodyStyle.setProperty('--lime', color);
+    bodyStyle.setProperty('--cell-alive', color);
+    bodyStyle.setProperty('--accent-ink', inkForColor(color));
+  } else {
+    bodyStyle.removeProperty('--lime');
+    bodyStyle.removeProperty('--cell-alive');
+    bodyStyle.removeProperty('--accent-ink');
+  }
+  themeColors.dark.alive = customMainColor || defaultAliveByTheme.dark;
+  themeColors.light.alive = customMainColor || defaultAliveByTheme.light;
+
+  if (mainColorInput) {
+    mainColorInput.value = customMainColor || defaultAliveByTheme[currentTheme()];
+  }
+  updateFavicon();
+  draw();
+}
+
 function applyTheme(theme) {
   if (!themeColors[theme]) return;
   document.body.dataset.theme = theme;
@@ -668,7 +741,10 @@ function applyTheme(theme) {
     button.classList.toggle('active', button.dataset.theme === theme);
   });
   themeColorMeta?.setAttribute('content', metaThemeColors[theme]);
-  faviconLink?.setAttribute('href', faviconByTheme[theme]);
+  updateFavicon();
+  if (mainColorInput) {
+    mainColorInput.value = customMainColor || defaultAliveByTheme[theme];
+  }
   draw();
   drawChart();
   scheduleEffects();
@@ -676,6 +752,15 @@ function applyTheme(theme) {
 
 document.querySelectorAll('.theme-btn').forEach((button) => {
   button.addEventListener('click', () => applyTheme(button.dataset.theme));
+});
+
+mainColorInput?.addEventListener('input', (event) => {
+  const value = event.target.value;
+  if (/^#[0-9a-f]{6}$/i.test(value)) applyMainColor(value);
+});
+
+mainColorResetBtn?.addEventListener('click', () => {
+  applyMainColor(null);
 });
 
 document.getElementById('trailToggle').addEventListener('change', (event) => {
@@ -717,4 +802,14 @@ speedValue.textContent = `${speedRange.value} gen/s`;
 updateZoom();
 setSettingsOpen(false);
 applyTheme(currentTheme());
+
+let storedMainColor = null;
+try {
+  const stored = localStorage.getItem(MAIN_COLOR_KEY);
+  if (stored && /^#[0-9a-f]{6}$/i.test(stored)) storedMainColor = stored;
+} catch (error) {
+  // Storage unavailable — start on the theme default.
+}
+applyMainColor(storedMainColor, { persist: false });
+
 setSize();

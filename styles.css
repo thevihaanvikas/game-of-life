@@ -964,13 +964,6 @@ input[type="range"] {
   cursor: pointer;
 }
 
-.settings-trigger:hover,
-.settings-trigger[aria-expanded="true"] {
-  border-color: var(--cyan);
-  background: var(--surface-hover);
-  color: var(--cyan);
-}
-
 .settings-desktop-trigger {
   display: none;
   width: 100%;
@@ -986,15 +979,6 @@ input[type="range"] {
   color: var(--text);
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.settings-desktop-trigger:hover,
-.settings-desktop-trigger[aria-expanded="true"] {
-  border-color: var(--cyan);
-  background: var(--surface-hover);
-  transform: translateY(-1px);
 }
 
 .settings-button-icon {
@@ -1195,6 +1179,56 @@ input[type="range"] {
 .settings-field select option {
   background: var(--panel-solid);
   color: var(--text);
+}
+
+.color-controls {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-field input[type="color"] {
+  width: 46px;
+  height: 32px;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.settings-field input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.settings-field input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.settings-field input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.color-reset {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.color-reset:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
 }
 
 /* --------------------------------------------------------------------------

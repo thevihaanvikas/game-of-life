@@ -1,3 +1,24 @@
+# Main-colour picker & settings hover v8
+
+- **Main colour picker** in the Settings panel (next to the pattern and
+  edge-behaviour fields): a native colour swatch plus a Reset button.
+  The chosen colour overrides the site's main colour for BOTH themes —
+  the `--lime` / `--cell-alive` tokens (Play button, status dot, legend,
+  glider icon, active-preset arrow, checkbox accent…), the canvas alive
+  colour, and the **favicon, regenerated live** as a recoloured SVG data
+  URI of the same glyph. The Play-button label flips between black and
+  white by luminance so it stays readable on any colour. The pick
+  persists in `localStorage` (validated on read; malformed values fall
+  back to theme defaults) and survives theme switches; Reset restores
+  per-theme defaults.
+- **Settings hover effects removed**: the SETTINGS rail card and the
+  header gear button no longer highlight, lift, or recolour on hover
+  (their `aria-expanded` styling went with it — the modal backdrop
+  covers the trigger whenever the menu is open, so it never showed).
+  The now-pointless transition on the rail card was dropped too.
+
+---
+
 # Contrast & button-pair polish v7
 
 - **Cell contrast**: freshly-born cells used to render at 52% opacity,
