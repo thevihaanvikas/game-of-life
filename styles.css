@@ -182,8 +182,14 @@ a:focus-visible {
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: clamp(16px, 3vw, 28px) clamp(16px, 4vw, 46px)
-    calc(20px + env(safe-area-inset-bottom, 0px));
+  /* Horizontal safe-area insets: zero on every desktop, Android and
+     non-notched device, so this changes nothing except notched iPhones
+     in landscape, where viewport-fit=cover lets the board and rail sit
+     under the notch / home-indicator side of the screen. */
+  padding-top: clamp(16px, 3vw, 28px);
+  padding-right: calc(clamp(16px, 4vw, 46px) + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(clamp(16px, 4vw, 46px) + env(safe-area-inset-left, 0px));
 }
 
 .topbar,
@@ -1398,8 +1404,9 @@ input[type="range"]::-moz-range-thumb {
 
 @media (max-width: 600px) {
   .app-shell {
-    padding-right: 10px;
-    padding-left: 10px;
+    /* Same inert-on-non-iOS safe-area treatment as the base rule. */
+    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+    padding-left: calc(10px + env(safe-area-inset-left, 0px));
   }
 
   .brand {

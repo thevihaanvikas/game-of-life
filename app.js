@@ -835,6 +835,30 @@ settingsTrigger.addEventListener('click', () => toggleSettings(settingsTrigger))
 settingsDesktopTrigger.addEventListener('click', () => toggleSettings(settingsDesktopTrigger));
 settingsClose.addEventListener('click', () => setSettingsOpen(false));
 settingsBackdrop.addEventListener('click', () => setSettingsOpen(false));
+
+// The panel declares aria-modal="true", which promises screen readers and
+// keyboard users that nothing behind it is reachable — so Tab must cycle
+// inside the dialog instead of escaping into the page behind the backdrop.
+settingsPanel.addEventListener('keydown', (event) => {
+  if (event.key !== 'Tab' || !settingsPanel.classList.contains('open')) return;
+  const focusables = Array.from(
+    settingsPanel.querySelectorAll('button, select, input, [tabindex]:not([tabindex="-1"])'),
+  ).filter((el) => !el.disabled && el.offsetParent !== null);
+  if (focusables.length === 0) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const active = document.activeElement;
+  const insidePanel = settingsPanel.contains(active);
+  if (event.shiftKey) {
+    if (active === first || !insidePanel) {
+      event.preventDefault();
+      last.focus();
+    }
+  } else if (active === last || !insidePanel) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 boundaryModeSelect.addEventListener('change', (event) => {
   boundaryMode = event.target.value === 'bounded' ? 'bounded' : 'wrap';
   writePrefs({ boundary: boundaryMode });

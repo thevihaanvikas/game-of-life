@@ -1,3 +1,31 @@
+# Ship prep v19
+
+- **Settings dialog focus management**: the panel already moved focus
+  to the × button on open and back to the trigger that opened it on
+  close — what was missing was the second half of the
+  `aria-modal="true"` promise: **Tab now cycles inside the dialog**
+  instead of escaping into the page behind the backdrop. A keydown
+  handler on the panel wraps Tab from the last control (Reset) to the
+  first (×) and Shift+Tab back again. Verified for every path: open
+  via the rail trigger, the header gear, and Enter on a focused
+  trigger; close via Escape, backdrop click, ×, all returning focus
+  to the opener; 14 consecutive Tabs never leaving the panel.
+- **Notched-iPhone landscape safe areas**: horizontal
+  `env(safe-area-inset-left/right)` padding on `.app-shell` (base rule
+  and the ≤600px override). `viewport-fit=cover` lets the locked
+  landscape layout render under the notch / home-indicator side of a
+  notched iPhone; the insets pull the board and rail inward there.
+  The values are **zero on every desktop, Android and non-notched
+  device**, so the change is provably inert anywhere else — computed
+  paddings are byte-identical to before at 1280×720, 550×400, 844×390
+  and 390×844 (46 / 10 / 33.76 / 10 px), with the landscape
+  invariants (rail == board height, no page scroll, gap equality)
+  re-verified. Portrait needs no horizontal treatment: the notch is
+  the top edge there and left/right insets are zero.
+- Harness deleted after passing; `node --check` clean.
+
+---
+
 # Ship prep v18
 
 - **Touch-aware painting hints**: the board footer hint and the empty
