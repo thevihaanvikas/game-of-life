@@ -1,3 +1,32 @@
+# Finishing touches v17
+
+- **Keyboard hints are PC-only**: a `(hover: none) and (pointer: coarse)`
+  media query hides the SPACE keycap and the Randomize `R` keycap on
+  touch-primary devices (phones, tablets). Touchscreen laptops keep
+  the hints — their primary pointer stays fine and they have keys.
+  The shortcuts still work everywhere; only the hints are hidden.
+- **Randomize `R` keycap repositioned**: the button is now a flex row,
+  and the keycap sits on the opposite edge of the label, vertically
+  centred on the label's own line (the old `float: right` pinned it
+  into the button's top-right corner).
+- **Landscape rail gap above Randomize/Settings closed**: the pair used
+  to sit bottom-anchored at a fixed height inside its (stretched) grid
+  track, leaving the track's share of the rail's leftover height as a
+  dead band between the Appearance card and the buttons. The pair now
+  **fills its track** (`height: auto` + stretch, floored at the
+  transport-button clamp), so the gap above it equals the rail's own
+  row gap — identical to the gap between the presets and Appearance
+  cards — while the buttons grow to absorb the extra height. The rail
+  still spans exactly the board's dynamic height (v14 invariant).
+- Verified in a real Chromium (harness deleted after passing): keycap
+  visibility on PC vs touch (pointer/hover emulation), keycap centring
+  and label clearance, gap equality and rail==board height at
+  1280×720 / 1440×900 / 1024×768 / 1600×1000 / 500×380, no page
+  scrolling anywhere, and the 1198×206 ultra-short window still riding
+  the rail's overflow safety valve with the pair reachable by scroll.
+
+---
+
 # Input & chrome polish v16
 
 - **Left-drag paints, right-drag erases** (mouse only): the pointer

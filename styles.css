@@ -575,6 +575,16 @@ a:focus-visible {
   letter-spacing: 0.08em;
 }
 
+/* Keyboard hints only make sense where a keyboard exists: touch-primary
+   devices (phones, tablets) never show them. Touchscreen laptops keep
+   the hints — their primary pointer stays fine, and they have keys. */
+@media (hover: none) and (pointer: coarse) {
+  .kbd,
+  .randomize-btn kbd {
+    display: none;
+  }
+}
+
 .transport {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -986,6 +996,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .randomize-btn {
+  display: flex;
+  align-items: center;
   width: 100%;
   min-width: 0;
   /* Match the corner radius of the control cards and the settings card it
@@ -1004,8 +1016,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .randomize-btn kbd {
-  float: right;
-  padding-top: 3px;
+  /* Opposite edge of the button, on the label's own line — the old
+     float pinned it into the top-right corner. */
+  margin-left: auto;
   color: var(--muted);
   font: 9px var(--mono);
 }
@@ -1783,21 +1796,20 @@ input[type="range"]::-moz-range-thumb {
     font-size: clamp(8px, 1.1vh, 11px);
   }
 
-  /* Randomize and Settings sit side by side in row 4 of the rail: identical
-     box dimensions — one shared height clamp, zero vertical padding (both
-     center their content), the same horizontal padding and radius. The old
-     min-height + vertical padding let the Settings button grow taller than
-     the fixed-height Randomize button at most viewport heights. */
+  /* Randomize and Settings sit side by side in row 4 of the rail. The pair
+     now FILLS its rail track instead of hugging the bottom at a fixed
+     height: the rail's rows share the leftover height that makes the
+     column match the board, and a bottom-anchored fixed-height pair left
+     that share sitting as a dead band between the Appearance card and the
+     buttons. Filling the track puts the gap above the pair at the rail's
+     own row gap (same as between every other card), and the buttons grow
+     just enough to absorb the extra height — never below the transport
+     button floor. Both boxes stay identical: the min-height here also
+     overrides the trigger's base 44px. */
   .randomize-btn,
   .settings-desktop-trigger {
-    height: clamp(24px, 3.8vh, 36px);
-    /* min-height: 0 cancels the trigger's base 44px, which would otherwise
-       beat the fixed height and keep the pair mismatched. */
-    min-height: 0;
-    /* With the rail rows stretching to match the board's height, anchor the
-       button pair to the bottom of their track so the pair sits flush with
-       the rail's (and board's) bottom edge. */
-    align-self: end;
+    height: auto;
+    min-height: clamp(24px, 3.8vh, 36px);
     padding: 0 clamp(6px, 0.8vw, 10px);
   }
 
