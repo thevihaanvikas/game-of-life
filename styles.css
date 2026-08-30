@@ -1,77 +1,43 @@
+/* ==========================================================================
+   life. — Conway's Game of Life
+   ==========================================================================
+   Layout contract (read before editing):
+
+   1. The STRUCTURE only ever switches on viewport width and orientation —
+      never on viewport height. Browser chrome differs between browsers,
+      so height-based structural queries made Arc and Brave disagree at
+      the same window size.
+   2. Landscape viewports never scroll: the shell is locked to exactly one
+      viewport height and every rail size is a vh-driven clamp, so the
+      interface compresses fluidly on short windows instead of switching
+      layouts (see section 8). Height is used only for that fluid scaling
+      and for dropping purely decorative copy on very short windows —
+      never to choose a different layout structure.
+   3. Portrait viewports (and sub-500px landscape windows, which cannot
+      fit a rail) use the scrolling stacked layout from the base styles.
+   4. `overflow: hidden` is used on <body> in landscape (and while the
+      settings modal is open), inside the canvas frame, and on text that
+      ellipsizes — never to hide whole sections of the page.
+   5. Every grid/flex child that can hold text or the canvas carries
+      `min-width: 0` so content can never blow out its track.
+   6. Every theme is defined in exactly ONE token block. Components only
+      consume tokens — no per-theme component colors.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Theme tokens
+   --------------------------------------------------------------------------
+   Both themes share the same flat, high-contrast scheme: solid surfaces,
+   full-contrast hairlines, no shadows, no blur, no glow. Dark is black
+   surfaces with white hairlines and a green primary; Light is the exact
+   inverse — white surfaces with black hairlines and a deeper green that
+   stays readable on white.
+   -------------------------------------------------------------------------- */
+
 :root {
   color-scheme: dark;
-  --bg: #090d1b;
-  --bg-deep: #070b16;
-  --panel: rgba(22, 29, 53, 0.72);
-  --panel-solid: #131a30;
-  --surface: rgba(255, 255, 255, 0.055);
-  --surface-hover: rgba(255, 255, 255, 0.09);
-  --line: rgba(148, 163, 205, 0.17);
-  --line-strong: rgba(148, 163, 205, 0.28);
-  --muted: #818ba8;
-  --muted-strong: #a2acc2;
-  --text: #f1f3fc;
-  --text-soft: #c2c9db;
-  --lime: #c7f36a;
-  --cell-alive: #c7f36a;
-  --cyan: #60d7ed;
-  --accent-ink: #18200d;
-  --canvas-bg: #0a1020;
-  --canvas-grid: rgba(108, 127, 170, 0.17);
-  --canvas-border: rgba(145, 161, 208, 0.14);
-  --pattern-bg: #101932;
-  --pattern-dot: #52617d;
-  --chart: #60d7ed;
-  --heart: #f07899;
-  --random-bg: rgba(96, 215, 237, 0.07);
-  --random-border: rgba(96, 215, 237, 0.22);
-  --accent-glow: rgba(199, 243, 106, 0.25);
-  --block-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-  --ambient-opacity: 0.19;
-  --shadow: 0 25px 60px rgba(0, 0, 0, 0.24);
-  --mono: "DM Mono", monospace;
-  --sans: "Space Grotesk", sans-serif;
-}
 
-body[data-theme="light"] {
-  color-scheme: light;
-  --bg: #edf4f1;
-  --bg-deep: #e5eeeb;
-  --panel: rgba(255, 255, 255, 0.86);
-  --panel-solid: #ffffff;
-  --surface: rgba(29, 76, 67, 0.055);
-  --surface-hover: rgba(29, 76, 67, 0.1);
-  --line: rgba(32, 62, 58, 0.17);
-  --line-strong: rgba(32, 62, 58, 0.3);
-  --muted: #536b69;
-  --muted-strong: #315955;
-  --text: #142b2a;
-  --text-soft: #234642;
-  /* Keep the UI accent bright enough for the primary action. Cells use the
-     separate, darker --cell-alive value so both surfaces stay readable. */
-  --lime: #a9d96b;
-  --cell-alive: #27734a;
-  --cyan: #16718a;
-  --accent-ink: #17351e;
-  --canvas-bg: #f6faf8;
-  --canvas-grid: rgba(48, 86, 77, 0.2);
-  --canvas-border: rgba(32, 62, 58, 0.22);
-  --pattern-bg: #e4efea;
-  --pattern-dot: #6b9188;
-  --chart: #16718a;
-  --heart: #c24f72;
-  --random-bg: rgba(22, 113, 138, 0.08);
-  --random-border: rgba(22, 113, 138, 0.3);
-  --accent-glow: rgba(39, 115, 74, 0.24);
-  --block-shadow: 0 12px 30px rgba(30, 67, 60, 0.08);
-  --ambient-opacity: 0.08;
-  --shadow: 0 18px 42px rgba(30, 67, 60, 0.12);
-}
-
-body[data-theme="contrast"] {
-  color-scheme: dark;
   --bg: #000000;
-  --bg-deep: #000000;
   --panel: #080808;
   --panel-solid: #080808;
   --surface: #111111;
@@ -82,10 +48,14 @@ body[data-theme="contrast"] {
   --muted-strong: #ffffff;
   --text: #ffffff;
   --text-soft: #ffffff;
-  --lime: #ffff00;
-  --cell-alive: #ffff00;
+
+  /* Primary accent: green. */
+  --lime: #00ff00;
+  --cell-alive: #00ff00;
+  /* Secondary accent: cyan (trail, chart, focus, hovers). */
   --cyan: #00ffff;
   --accent-ink: #000000;
+
   --canvas-bg: #000000;
   --canvas-grid: rgba(255, 255, 255, 0.36);
   --canvas-border: #ffffff;
@@ -93,13 +63,71 @@ body[data-theme="contrast"] {
   --pattern-dot: #ffffff;
   --chart: #00ffff;
   --heart: #ff7ca5;
-  --random-bg: #001d1d;
-  --random-border: #00ffff;
   --accent-glow: transparent;
+
   --block-shadow: none;
-  --ambient-opacity: 0;
   --shadow: none;
+  --modal-backdrop: rgba(0, 0, 0, 0.72);
+
+  --mono: "DM Mono", monospace;
+  --sans: "Space Grotesk", sans-serif;
 }
+
+/* Light mirrors dark token for token: white page, black hairlines, flat
+   gray surfaces. The green and cyan are darkened just enough to stay
+   readable on white; everything else is a 1:1 inversion. */
+body[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --panel: #f7f7f7;
+  --panel-solid: #ffffff;
+  --surface: #f0f0f0;
+  --surface-hover: #e2e2e2;
+  --line: #000000;
+  --line-strong: #000000;
+  --muted: #4d4d4d;
+  --muted-strong: #000000;
+  --text: #000000;
+  --text-soft: #000000;
+
+  --lime: #00b300;
+  --cell-alive: #00b300;
+  --cyan: #16718a;
+  --accent-ink: #000000;
+
+  --canvas-bg: #ffffff;
+  --canvas-grid: rgba(0, 0, 0, 0.36);
+  --canvas-border: #000000;
+  --pattern-bg: #ffffff;
+  --pattern-dot: #000000;
+  --chart: #16718a;
+  --heart: #d81b60;
+  --accent-glow: transparent;
+
+  --block-shadow: none;
+  --shadow: none;
+  --modal-backdrop: rgba(0, 0, 0, 0.45);
+}
+
+/* Randomize-button accents derive from the secondary accent ON <BODY>:
+   the Settings colour picker overrides --cyan there, so the button's
+   border and wash follow a custom main colour automatically, and the wash
+   stays theme-aware (var(--bg)) when the theme flips. */
+body {
+  --random-border: var(--cyan);
+  --random-bg: color-mix(in srgb, var(--cyan) 12%, var(--bg));
+}
+
+/* Keep the overscroll area in sync with the theme (progressive
+   enhancement; harmless where :has() is unsupported). */
+html:has(body[data-theme="light"]) {
+  background: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   2. Base / reset
+   -------------------------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
@@ -121,6 +149,10 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+body.settings-open {
+  overflow: hidden;
+}
+
 button,
 input {
   font: inherit;
@@ -137,31 +169,9 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
-.ambient {
-  position: fixed;
-  z-index: 0;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: var(--ambient-opacity);
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.ambient-one {
-  top: -220px;
-  left: -210px;
-  background: #3849c7;
-}
-
-.ambient-two {
-  right: -230px;
-  bottom: -200px;
-  width: 430px;
-  height: 430px;
-  background: #23a6a5;
-}
+/* --------------------------------------------------------------------------
+   3. App shell, top bar, hero
+   -------------------------------------------------------------------------- */
 
 .app-shell {
   position: relative;
@@ -170,8 +180,16 @@ a:focus-visible {
   flex-direction: column;
   width: min(100%, 1412px);
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: clamp(18px, 3vw, 30px) clamp(16px, 4vw, 46px) calc(24px + env(safe-area-inset-bottom, 0px));
+  /* Horizontal safe-area insets: zero on every desktop, Android and
+     non-notched device, so this changes nothing except notched iPhones
+     in landscape, where viewport-fit=cover lets the board and rail sit
+     under the notch / home-indicator side of the screen. */
+  padding-top: clamp(16px, 3vw, 28px);
+  padding-right: calc(clamp(16px, 4vw, 46px) + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(clamp(16px, 4vw, 46px) + env(safe-area-inset-left, 0px));
 }
 
 .topbar,
@@ -241,29 +259,24 @@ a:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
+  white-space: nowrap;
 }
 
 .live-dot,
 .status-dot {
   display: inline-block;
   flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--lime);
   box-shadow: 0 0 12px var(--lime);
 }
 
-.live-dot,
-.status-dot {
-  width: 6px;
-  height: 6px;
-}
-
 .hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 32px;
-  padding: clamp(54px, 7vw, 82px) 4px clamp(30px, 4.5vw, 48px);
+  display: block;
+  flex: 0 0 auto;
+  padding: clamp(28px, 6vw, 52px) 2px clamp(20px, 4vw, 34px);
 }
 
 .hero > div {
@@ -271,7 +284,7 @@ a:focus-visible {
 }
 
 .eyebrow {
-  margin: 0 0 18px;
+  margin: 0 0 clamp(12px, 2vw, 18px);
   color: var(--cyan);
   font: 500 11px var(--mono);
   letter-spacing: 0.16em;
@@ -280,10 +293,11 @@ a:focus-visible {
 .hero h1 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(52px, 7vw, 88px);
+  font-size: clamp(40px, 11vw, 64px);
   font-weight: 600;
   letter-spacing: -0.07em;
   line-height: 0.91;
+  overflow-wrap: break-word;
 }
 
 .hero h1 em {
@@ -292,33 +306,39 @@ a:focus-visible {
 }
 
 .intro {
-  max-width: 260px;
-  margin: 0 5% 6px 0;
+  max-width: 34ch;
+  margin: clamp(14px, 3vw, 22px) 0 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: clamp(12px, 2.6vw, 14px);
   line-height: 1.65;
 }
+
+/* --------------------------------------------------------------------------
+   4. Workspace: board + controls
+   --------------------------------------------------------------------------
+   Base layout is a single stacked column (phones and portrait tablets).
+   Side-by-side layouts are opt-in via width/orientation media queries in
+   section 10.
+   -------------------------------------------------------------------------- */
 
 .workspace {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 335px);
-  align-items: start;
-  gap: clamp(16px, 2vw, 24px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(10px, 2vw, 24px);
 }
 
 .glass {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--panel);
-  box-shadow: var(--shadow), inset 0 1px rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow);
 }
 
 .board-wrap {
   display: flex;
   min-width: 0;
-  padding: 17px 17px 14px;
+  padding: 15px 15px 12px;
   flex-direction: column;
 }
 
@@ -330,6 +350,7 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .toolbar-label {
@@ -408,9 +429,14 @@ a:focus-visible {
   font-size: 18px;
 }
 
+/* The frame keeps an 8:5 ratio so it always has a height, whatever the
+   viewport. The renderer adapts the grid dimensions to the actual frame
+   size, so it never letterboxes. */
 .canvas-frame {
   position: relative;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   aspect-ratio: 8 / 5;
   margin: 12px 0 10px;
   overflow: hidden;
@@ -419,9 +445,10 @@ a:focus-visible {
   background: var(--canvas-bg);
 }
 
-canvas {
+.canvas-frame canvas {
   display: block;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   image-rendering: pixelated;
   touch-action: none;
@@ -485,19 +512,11 @@ canvas {
   width: 7px;
   height: 7px;
   flex: 0 0 auto;
-  border-radius: 1px;
   background: var(--surface-hover);
 }
 
 .legend-cell.on {
   background: var(--cell-alive);
-  box-shadow: 0 0 8px var(--cell-alive);
-}
-
-.legend-cell.trail {
-  background: var(--cyan);
-  box-shadow: 0 0 7px var(--cyan);
-  opacity: 0.38;
 }
 
 .sep {
@@ -505,29 +524,41 @@ canvas {
   color: var(--muted);
 }
 
+/* --------------------------------------------------------------------------
+   5. Control rail blocks
+   -------------------------------------------------------------------------- */
+
 .controls {
-  display: flex;
+  display: grid;
   min-width: 0;
-  flex-direction: column;
-  gap: 13px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: clamp(9px, 2vw, 13px);
 }
 
 .control-block {
   min-width: 0;
-  padding: 19px;
+  padding: 15px;
   border: 1px solid var(--line);
   border-radius: 11px;
   background: var(--panel);
   box-shadow: var(--block-shadow);
 }
 
+/* Stacked layout: pairs on row 1, full-width sections below. */
+.simulation-block { grid-column: 1; grid-row: 1; }
+.stats-block { grid-column: 2; grid-row: 1; }
+.presets-block { grid-column: 1 / -1; grid-row: 2; }
+.appearance-block { grid-column: 1 / -1; grid-row: 3; }
+.randomize-btn { grid-column: 1 / -1; grid-row: 4; }
+
 .section-head {
   display: flex;
   min-width: 0;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   color: var(--muted);
   font: 10px var(--mono);
   letter-spacing: 0.13em;
@@ -539,12 +570,37 @@ canvas {
   white-space: nowrap;
 }
 
-.kbd,
-.sparkle,
-.pulse-line {
+/* Shortcut keys sit directly beside their section label as keycaps. */
+.kbd {
   flex: 0 0 auto;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
   color: var(--muted);
-  letter-spacing: 0;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+/* PC-only wording (right-drag erase, "Click") swaps out on touch-primary
+   devices exactly like the keyboard keycaps do. The base rule must come
+   BEFORE the media block: same specificity, so source order decides. */
+.touch-only {
+  display: none;
+}
+
+/* Keyboard hints only make sense where a keyboard exists: touch-primary
+   devices (phones, tablets) never show them. Touchscreen laptops keep
+   the hints — their primary pointer stays fine, and they have keys. */
+@media (hover: none) and (pointer: coarse) {
+  .kbd,
+  .randomize-btn kbd,
+  .pc-only {
+    display: none;
+  }
+
+  .touch-only {
+    display: inline;
+  }
 }
 
 .transport {
@@ -560,7 +616,8 @@ canvas {
   border-radius: 5px;
   cursor: pointer;
   font: 500 12px var(--sans);
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .primary-btn {
@@ -591,18 +648,12 @@ canvas {
   background: var(--surface-hover);
 }
 
-.step-btn span {
-  margin-right: 5px;
-  font-size: 17px;
-  vertical-align: -1px;
-}
-
 .speed-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 20px 0 9px;
+  margin: 16px 0 9px;
   color: var(--muted-strong);
   font-size: 11px;
 }
@@ -613,14 +664,49 @@ canvas {
   white-space: nowrap;
 }
 
+/* Speed slider: a neutral grey track in BOTH themes (the accent-coloured
+   thumb still follows the main colour). Fully custom-styled, since
+   accent-color would paint the track with the theme accent. */
 input[type="range"] {
   display: block;
   width: 100%;
   min-width: 0;
   height: 16px;
   margin: 0;
-  accent-color: var(--lime);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
   cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #8a8a8a;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--lime);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #8a8a8a;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--lime);
 }
 
 .presets-block {
@@ -638,7 +724,7 @@ input[type="range"] {
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: 48px;
+  min-height: 46px;
   align-items: center;
   gap: 12px;
   padding: 9px 7px;
@@ -656,10 +742,6 @@ input[type="range"] {
   background: var(--surface);
 }
 
-.preset.active .arrow {
-  color: var(--lime);
-}
-
 .pattern-icon {
   position: relative;
   display: block;
@@ -668,8 +750,6 @@ input[type="range"] {
   flex: 0 0 auto;
   border-radius: 3px;
   background-color: var(--pattern-bg);
-  background-image: radial-gradient(var(--pattern-dot) 1.5px, transparent 1.5px);
-  background-size: 7px 7px;
 }
 
 .preset > span:nth-child(2) {
@@ -695,39 +775,102 @@ input[type="range"] {
   font: 9px var(--mono);
 }
 
-.arrow {
-  margin-left: auto;
+/* Every preset icon is a single inline SVG on a 3×3 viewBox: it scales with
+   the icon box at every breakpoint and nothing (no CSS dot-grid) is layered
+   underneath to fight it. */
+.pattern-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.glider-pattern svg rect {
+  fill: var(--cell-alive);
+}
+
+.gun-pattern svg rect {
+  fill: var(--cyan);
+}
+
+.pulsar-pattern svg rect,
+.penta-pattern svg rect {
+  fill: var(--cell-alive);
+}
+
+.lwss-pattern svg rect,
+.rpentomino-pattern svg rect,
+.diehard-pattern svg rect,
+.diehard-pattern svg circle {
+  fill: var(--cyan);
+}
+
+.acorn-pattern svg rect {
+  fill: var(--cell-alive);
+}
+
+/* "More presets" expander — only visible where the settings control is the
+   gear icon (i.e. outside the landscape gate). Landscape CSS re-shows every
+   preset and hides this button. */
+.more-presets {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 7px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  background: transparent;
   color: var(--muted);
-  font-size: 16px;
+  font: 500 11px var(--sans);
+  cursor: pointer;
 }
 
-.glider-pattern::after {
-  position: absolute;
-  top: 7px;
-  left: 8px;
-  width: 5px;
-  height: 5px;
-  background: var(--cell-alive);
-  box-shadow: 7px 0 var(--cell-alive), 14px 0 var(--cell-alive), 14px 7px var(--cell-alive), 7px 14px var(--cell-alive);
-  content: "";
+.more-presets:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
 }
 
-.gun-pattern {
-  background-image: radial-gradient(var(--cyan) 1.5px, transparent 1.5px);
-  opacity: 0.7;
+.more-presets .chev {
+  font-size: 10px;
+  transition: transform 0.2s ease;
 }
 
-.random-pattern {
-  background-image: none;
-  color: var(--cyan);
-  font: 25px var(--mono);
-  line-height: 30px;
-  text-align: center;
+.preset-list.open .more-presets .chev {
+  transform: rotate(180deg);
+}
+
+/* Collapsed (default): the extra presets are clipped to zero height and
+   pulled tight against the row above ( cancelling the list gap), so the
+   closed list reads exactly as it did before the wrapper existed. */
+.preset-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  grid-column: 1 / -1;
+  margin-top: -3px;
+  visibility: hidden;
+  transition: grid-template-rows 0.35s ease, margin-top 0.35s ease,
+    visibility 0.35s;
+}
+
+.preset-more-inner {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+/* Expanded: the wrapper grows to its natural height — the grid-rows trick
+   animates smoothly without measuring anything in JS. */
+.preset-list.open .preset-more {
+  grid-template-rows: 1fr;
+  margin-top: 0;
+  visibility: visible;
 }
 
 .stats-block {
-  min-width: 0;
-  padding-bottom: 17px;
   overflow: hidden;
 }
 
@@ -735,7 +878,7 @@ input[type="range"] {
   display: grid;
   min-width: 0;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 18px;
+  gap: 12px;
 }
 
 .stats-grid > div {
@@ -744,13 +887,13 @@ input[type="range"] {
 }
 
 .stats-grid div + div {
-  padding-left: 18px;
+  padding-left: 12px;
   border-left: 1px solid var(--line);
 }
 
 .stats-grid small {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   overflow: hidden;
   color: var(--muted);
   font: 9px var(--mono);
@@ -763,34 +906,20 @@ input[type="range"] {
   display: block;
   overflow: hidden;
   color: var(--text);
-  font: 500 22px var(--mono);
+  font: 500 clamp(15px, 4vw, 19px) var(--mono);
   letter-spacing: -0.07em;
   text-overflow: clip;
   white-space: nowrap;
 }
 
+/* The population chart only renders in the desktop rail (see media
+   queries); its canvas is sized there. */
 .population-chart {
-  display: block;
-  margin-top: 12px;
-}
-
-.population-chart > span {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--muted);
-  font: 8px var(--mono);
-  letter-spacing: 0.08em;
-}
-
-.population-chart canvas {
-  width: 100%;
-  height: 48px;
-  cursor: default;
-  image-rendering: auto;
+  display: none;
 }
 
 .appearance-block {
-  padding: 14px 17px;
+  padding: 14px 15px;
 }
 
 .appearance-block .section-head {
@@ -813,6 +942,7 @@ input[type="range"] {
   background: transparent;
   color: var(--muted);
   font: 9px var(--sans);
+  line-height: 1.25;
   cursor: pointer;
 }
 
@@ -884,7 +1014,13 @@ input[type="range"] {
 }
 
 .randomize-btn {
+  display: flex;
+  align-items: center;
   width: 100%;
+  min-width: 0;
+  /* Match the corner radius of the control cards and the settings card it
+     sits beside, so the rail reads as one unified set of tabs. */
+  border-radius: 11px;
   border: 1px solid var(--random-border);
   background: var(--random-bg);
   color: var(--cyan);
@@ -898,15 +1034,26 @@ input[type="range"] {
 }
 
 .randomize-btn kbd {
-  float: right;
-  padding-top: 3px;
+  /* Opposite edge of the button, on the label's own line — the old
+     float pinned it into the top-right corner. */
+  margin-left: auto;
   color: var(--muted);
   font: 9px var(--mono);
 }
 
 .page-footer {
   flex: 0 0 auto;
-  padding: 28px 4px 0;
+  /* In scrolling layouts, pin the footer to the bottom of the viewport
+     whenever the content above happens to be shorter than it. */
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.page-footer span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .page-footer b {
@@ -915,861 +1062,10 @@ input[type="range"] {
   font-size: 13px;
 }
 
-/* At desktop widths the board fills the available workspace. The renderer adapts
-   the grid dimensions to the frame so the drawable area is never letterboxed. */
-@media (min-width: 851px) and (max-width: 1100px) {
-  .app-shell {
-    padding-right: 24px;
-    padding-left: 24px;
-  }
+/* --------------------------------------------------------------------------
+   6. Settings: header gear, desktop rail trigger, modal panel
+   -------------------------------------------------------------------------- */
 
-  .workspace {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
-
-  .hero h1 {
-    font-size: clamp(48px, 6vw, 72px);
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-content: start;
-    gap: 9px;
-  }
-
-  .simulation-block {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .stats-block {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .presets-block {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .appearance-block {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
-
-  .randomize-btn {
-    grid-column: 1 / -1;
-    grid-row: 4;
-  }
-
-  .stats-grid {
-    gap: 10px;
-  }
-
-  .stats-grid div + div {
-    padding-left: 10px;
-  }
-
-  .stats-grid strong {
-    font-size: clamp(16px, 2vw, 21px);
-  }
-}
-
-@media (max-width: 850px) {
-  .app-shell {
-    padding-top: 18px;
-    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .hero {
-    display: block;
-    padding-top: clamp(32px, 7vw, 58px);
-    padding-bottom: 30px;
-  }
-
-  .intro {
-    max-width: none;
-    margin: 22px 0 0;
-  }
-
-  .workspace {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-content: start;
-    gap: 9px;
-  }
-
-  .simulation-block {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .stats-block {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .presets-block {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .appearance-block {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
-
-  .randomize-btn {
-    grid-column: 1 / -1;
-    grid-row: 4;
-  }
-
-  .control-block {
-    padding: 14px 15px;
-  }
-
-  .section-head {
-    margin-bottom: 10px;
-  }
-
-  .population-chart {
-    display: none;
-  }
-
-  .preset {
-    min-height: 42px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-  }
-
-  .pattern-icon {
-    width: 27px;
-    height: 27px;
-    background-size: 6px 6px;
-  }
-
-  .stats-grid {
-    gap: clamp(6px, 1.8vw, 12px);
-  }
-
-  .stats-grid div + div {
-    padding-left: clamp(6px, 1.8vw, 12px);
-  }
-
-  .stats-grid strong {
-    font-size: clamp(14px, 3.6vw, 18px);
-  }
-
-  .stats-grid small {
-    font-size: 8px;
-  }
-
-  .appearance-block {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-
-  .page-footer {
-    padding-top: 18px;
-  }
-}
-
-@media (max-width: 600px) {
-  .app-shell {
-    padding-right: 10px;
-    padding-left: 10px;
-  }
-
-  .brand {
-    font-size: 20px;
-  }
-
-  .brand-mark {
-    width: 21px;
-    height: 21px;
-  }
-
-  .header-note {
-    display: none;
-  }
-
-  .hero {
-    padding-top: 24px;
-    padding-bottom: 20px;
-  }
-
-  .hero h1 {
-    font-size: clamp(40px, 12vw, 56px);
-  }
-
-  .intro {
-    margin-top: 14px;
-    font-size: 11px;
-    line-height: 1.45;
-  }
-
-  .board-wrap {
-    padding: 11px 10px 9px;
-  }
-
-  .board-toolbar,
-  .board-footer {
-    height: 22px;
-  }
-
-  .canvas-frame {
-    margin-top: 7px;
-    margin-bottom: 7px;
-  }
-
-  .toolbar-actions {
-    gap: 1px;
-  }
-
-  .zoom-control {
-    gap: 1px;
-  }
-
-  .legend,
-  .size-readout {
-    font-size: 8px;
-  }
-
-  .size-readout span:last-child {
-    display: none;
-  }
-
-  .preset-list {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 4px;
-  }
-
-  .preset {
-    min-height: 38px;
-    gap: 7px;
-    padding: 4px;
-  }
-
-  .preset small {
-    display: none;
-  }
-
-  .preset .arrow {
-    font-size: 13px;
-  }
-
-  .pattern-icon {
-    width: 23px;
-    height: 23px;
-  }
-
-  .random-pattern {
-    font-size: 20px;
-    line-height: 23px;
-  }
-
-  .theme-options {
-    gap: 3px;
-  }
-
-  .theme-btn {
-    padding-right: 2px;
-    padding-left: 2px;
-    font-size: 8px;
-  }
-
-  .page-footer {
-    font-size: 8px;
-  }
-
-  .page-footer span:last-child {
-    display: none;
-  }
-}
-
-@media (max-width: 400px) {
-  .controls {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .simulation-block,
-  .stats-block,
-  .presets-block,
-  .appearance-block,
-  .randomize-btn {
-    grid-column: 1;
-  }
-
-  .simulation-block {
-    grid-row: 1;
-  }
-
-  .stats-block {
-    grid-row: 2;
-  }
-
-  .presets-block {
-    grid-row: 3;
-  }
-
-  .appearance-block {
-    grid-row: 4;
-  }
-
-  .randomize-btn {
-    grid-row: 5;
-  }
-
-  .simulation-block .transport {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .stats-grid strong {
-    font-size: 17px;
-  }
-}
-
-/* In landscape on tablets, keep the board beside its controls. Phones stay in a
-   single column so neither side becomes too narrow. */
-@media (min-width: 600px) and (max-width: 850px) and (orientation: landscape) {
-  .hero {
-    display: flex;
-    padding-top: 20px;
-    padding-bottom: 20px;
-  }
-
-  .intro {
-    margin: 0 5% 6px 0;
-  }
-
-  .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
-    align-items: start;
-  }
-
-  .controls {
-    display: flex;
-    max-width: 300px;
-  }
-}
-
-@media (max-height: 760px) and (min-width: 851px) {
-  .app-shell {
-    padding-top: 14px;
-    padding-bottom: 16px;
-  }
-
-  .hero {
-    padding-top: 28px;
-    padding-bottom: 24px;
-  }
-
-  .hero h1 {
-    font-size: clamp(46px, 6vw, 70px);
-  }
-
-  .board-wrap {
-    padding-top: 12px;
-    padding-bottom: 10px;
-  }
-
-  .control-block {
-    padding: 12px 14px;
-  }
-
-  .section-head {
-    margin-bottom: 10px;
-  }
-
-  .preset {
-    min-height: 40px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-  }
-
-  .appearance-block {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-
-  .page-footer {
-    padding-top: 14px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-
-/* Final theme tokens and viewport-fit pass. */
-:root {
-  --cell-alive: var(--lime);
-  --canvas-background: #0a1020;
-  --canvas-grid-color: rgba(108, 127, 170, 0.17);
-  --random-background: rgba(96, 215, 237, 0.07);
-  --random-border-color: rgba(96, 215, 237, 0.22);
-  --accent-glow: rgba(199, 243, 106, 0.25);
-  --control-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-}
-
-body[data-theme="light"] {
-  color-scheme: light;
-  --bg: #edf4f1;
-  --panel: rgba(255, 255, 255, 0.86);
-  --line: rgba(32, 62, 58, 0.17);
-  --muted: #536b69;
-  --text: #142b2a;
-  --lime: #a9d96b;
-  --cell-alive: #27734a;
-  --cyan: #16718a;
-  --canvas-background: #f6faf8;
-  --canvas-grid-color: rgba(48, 86, 77, 0.2);
-  --random-background: rgba(22, 113, 138, 0.08);
-  --random-border-color: rgba(22, 113, 138, 0.3);
-  --accent-glow: rgba(39, 115, 74, 0.24);
-  --control-shadow: 0 12px 30px rgba(30, 67, 60, 0.08);
-}
-
-body[data-theme="contrast"] {
-  color-scheme: dark;
-  --cell-alive: #ffff00;
-  --canvas-background: #000;
-  --canvas-grid-color: rgba(255, 255, 255, 0.36);
-  --random-background: #001d1d;
-  --random-border-color: #00ffff;
-  --accent-glow: transparent;
-  --control-shadow: none;
-}
-
-body[data-theme="light"] .ambient { opacity: 0.08; }
-body[data-theme="contrast"] .ambient { display: none; }
-body[data-theme="contrast"] .glass,
-body[data-theme="contrast"] .control-block { box-shadow: none; }
-
-/* Eliminate dark-only component colors in the light theme. */
-body[data-theme="light"] .control-block {
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: var(--control-shadow);
-}
-body[data-theme="light"] .step-btn {
-  background: rgba(20, 55, 50, 0.06);
-  border-color: rgba(32, 62, 58, 0.22);
-  color: #173d3a;
-}
-body[data-theme="light"] .step-btn:hover,
-body[data-theme="light"] .randomize-btn:hover {
-  background: rgba(20, 55, 50, 0.1);
-}
-body[data-theme="light"] .stats-grid strong { color: #173d3a; }
-body[data-theme="light"] .stats-grid small,
-body[data-theme="light"] .section-head,
-body[data-theme="light"] .toolbar-label,
-body[data-theme="light"] .preset small,
-body[data-theme="light"] .page-footer { color: #4f6865; }
-body[data-theme="light"] .zoom-control,
-body[data-theme="light"] .zoom-control button,
-body[data-theme="light"] .icon-btn,
-body[data-theme="light"] .arrow { color: #41615e; }
-body[data-theme="light"] .zoom-control button:hover,
-body[data-theme="light"] .icon-btn:hover { color: #173d3a; }
-body[data-theme="light"] .preset:hover,
-body[data-theme="light"] .preset.active { background: rgba(29, 76, 67, 0.055); border-color: rgba(32, 62, 58, 0.17); }
-body[data-theme="light"] .pattern-icon {
-  background-color: #e4efea;
-  background-image: radial-gradient(#6b9188 1.5px, transparent 1.5px);
-}
-body[data-theme="light"] .gun-pattern {
-  background-image: radial-gradient(var(--cyan) 1.5px, transparent 1.5px);
-}
-body[data-theme="light"] .empty-hint { color: #60807a; }
-body[data-theme="light"] .empty-hint strong { color: #315955; }
-body[data-theme="light"] .empty-hint small { color: #60807a; }
-body[data-theme="light"] .canvas-frame {
-  background: var(--canvas-background);
-  border-color: rgba(32, 62, 58, 0.22);
-}
-body[data-theme="light"] .randomize-btn {
-  background: var(--random-background);
-  border-color: var(--random-border-color);
-}
-body[data-theme="light"] .randomize-btn kbd { color: #536b69; }
-body[data-theme="light"] .legend-cell { background: rgba(29, 76, 67, 0.1); }
-body[data-theme="light"] .legend-cell.on { background: var(--cell-alive); box-shadow: 0 0 8px rgba(39, 115, 74, 0.38); }
-body[data-theme="light"] .legend-cell.trail { background: var(--cyan); box-shadow: 0 0 7px var(--cyan); }
-
-.primary-btn:hover { box-shadow: 0 0 20px var(--accent-glow); }
-.randomize-btn { background: var(--random-background); border-color: var(--random-border-color); }
-.legend-cell.on { background: var(--cell-alive); }
-.canvas-frame { background: var(--canvas-background); }
-
-/* Desktop fit mode: keep the complete interface inside the viewport. */
-.hero {
-    padding-top: clamp(18px, 4.3vh, 62px);
-    padding-bottom: clamp(14px, 3vh, 44px);
-  }
-
-  .eyebrow { margin-bottom: clamp(9px, 1.7vh, 18px); }
-  .hero h1 { font-size: clamp(44px, min(7vw, 8.5vh), 88px); }
-  .intro { font-size: clamp(11px, 1.6vh, 14px); line-height: 1.5; }
-
-  .workspace {
-    min-height: 0;
-    flex: 1 1 0;
-    align-items: stretch;
-  }
-
-  .board-wrap {
-    display: flex;
-    height: 100%;
-    min-height: 0;
-    flex-direction: column;
-  }
-
-  .board-toolbar,
-  .board-footer {
-    flex: 0 0 auto;
-  }
-
-  .canvas-frame {
-    height: auto;
-    min-height: 0;
-    flex: 1 1 auto;
-    aspect-ratio: auto;
-  }
-
-  .controls {
-    display: grid;
-    height: 100%;
-    min-height: 0;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-    align-content: start;
-    gap: clamp(6px, 1.15vh, 13px);
-    overflow: hidden;
-  }
-
-  .simulation-block { grid-column: 1; grid-row: 1; }
-  .stats-block { grid-column: 2; grid-row: 1; }
-  .presets-block { grid-column: 1 / -1; grid-row: 2; }
-  .appearance-block { grid-column: 1; grid-row: 3; }
-  .randomize-btn { grid-column: 2; grid-row: 3; }
-
-  .control-block { padding: clamp(8px, 1.45vh, 19px) clamp(10px, 1.35vw, 19px); }
-  .section-head { margin-bottom: clamp(7px, 1.45vh, 15px); }
-  .transport { gap: clamp(4px, 0.65vw, 8px); }
-  .primary-btn,
-  .step-btn,
-  .randomize-btn { height: clamp(31px, 4.2vh, 39px); }
-  .speed-row { margin-top: clamp(7px, 1.7vh, 20px); margin-bottom: clamp(4px, 0.9vh, 9px); }
-  .preset { min-height: clamp(34px, 5vh, 48px); padding-top: clamp(4px, 0.9vh, 9px); padding-bottom: clamp(4px, 0.9vh, 9px); }
-  .pattern-icon { width: clamp(24px, 3.4vh, 31px); height: clamp(24px, 3.4vh, 31px); }
-  .stats-grid { gap: clamp(7px, 1.2vw, 18px); }
-  .stats-grid div + div { padding-left: clamp(7px, 1.2vw, 18px); }
-  .stats-grid strong { font-size: clamp(15px, 2.1vw, 22px); }
-  .population-chart { margin-top: clamp(7px, 1.3vh, 12px); }
-  .population-chart canvas { height: clamp(30px, 5.3vh, 48px); }
-  .appearance-block { padding-top: clamp(8px, 1.35vh, 14px); padding-bottom: clamp(8px, 1.35vh, 14px); }
-  .appearance-block .section-head { margin-bottom: clamp(6px, 1.1vh, 10px); }
-  .theme-btn { min-height: clamp(26px, 3.4vh, 30px); padding-top: clamp(4px, 0.7vh, 6px); padding-bottom: clamp(4px, 0.7vh, 6px); }
-  .toggle-row { margin-top: clamp(6px, 1.1vh, 10px); }
-  .page-footer { padding-top: clamp(7px, 1.8vh, 28px); }
-}
-
-/* Short desktop windows also use a two-row preset palette. */
-@media (min-width: 851px) and (max-height: 720px) {
-  .app-shell { padding-top: 10px; padding-bottom: 10px; }
-  .hero { padding-top: 12px; padding-bottom: 12px; }
-  .hero h1 { font-size: clamp(40px, min(6vw, 7.5vh), 64px); }
-  .intro { font-size: 10px; }
-  .controls { gap: 6px; }
-  .control-block { padding: 7px 10px; }
-  .section-head { margin-bottom: 6px; }
-  .primary-btn,
-  .step-btn,
-  .randomize-btn { height: 30px; font-size: 11px; }
-  .speed-row { margin-top: 6px; margin-bottom: 2px; }
-  .preset { min-height: 31px; gap: 7px; padding: 3px 4px; }
-  .pattern-icon { width: 22px; height: 22px; background-size: 6px 6px; }
-  .preset b { font-size: 10px; }
-  .preset small { margin-top: 0; font-size: 8px; }
-  .stats-grid small { margin-bottom: 3px; font-size: 8px; }
-  .stats-grid strong { font-size: 16px; }
-  .population-chart { margin-top: 5px; }
-  .population-chart > span { margin-bottom: 2px; font-size: 7px; }
-  .population-chart canvas { height: 25px; }
-  .appearance-block { padding-top: 6px; padding-bottom: 6px; }
-  .theme-btn { min-height: 25px; font-size: 8px; }
-  .toggle-row { margin-top: 5px; font-size: 10px; }
-  .randomize-btn span { margin-right: 5px; font-size: 16px; }
-  .page-footer { padding-top: 6px; }
-}
-
-@media (min-width: 851px) and (max-height: 540px) {
-  .hero { padding-top: 7px; padding-bottom: 7px; }
-  .hero h1 { font-size: 36px; }
-  .hero .eyebrow { margin-bottom: 5px; font-size: 9px; }
-  .hero .intro,
-  .page-footer { display: none; }
-}
-
-@media (min-width: 851px) and (max-height: 480px) {
-  .control-block { padding: 5px 8px; }
-  .section-head { margin-bottom: 4px; font-size: 9px; }
-  .primary-btn,
-  .step-btn,
-  .randomize-btn { height: 27px; font-size: 10px; }
-  .speed-row { margin-top: 4px; margin-bottom: 0; font-size: 10px; }
-  .speed-row output { font-size: 9px; }
-  .preset { min-height: 26px; padding: 2px 3px; }
-  .preset small { display: none; }
-  .pattern-icon { width: 19px; height: 19px; }
-  .random-pattern { line-height: 19px; }
-  .stats-grid small { margin-bottom: 2px; font-size: 7px; }
-  .stats-grid strong { font-size: 14px; }
-  .population-chart { display: none; }
-  .appearance-block { padding-top: 5px; padding-bottom: 5px; }
-  .theme-btn { min-height: 22px; padding-top: 2px; padding-bottom: 2px; font-size: 7px; }
-  .toggle-row { margin-top: 3px; font-size: 9px; }
-}
-
-/* Desktop-sized preview panes can be narrower than a full monitor. Treat the
-   701px+ canvas as a compact desktop layout too, and keep landscape tablets
-   beside their controls instead of falling back to a tall scrolling page. */
-@media (min-width: 701px) and (max-width: 850px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
-  html,
-  body {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .app-shell {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
-    padding: 10px 16px;
-  }
-
-  .hero {
-    display: flex;
-    gap: 20px;
-    padding: 20px 0;
-  }
-
-  .hero h1 {
-    font-size: clamp(40px, 7vw, 58px);
-  }
-
-  .eyebrow {
-    margin-bottom: 10px;
-  }
-
-  .intro {
-    margin: 0 3% 4px 0;
-    font-size: 11px;
-    line-height: 1.45;
-  }
-
-  .workspace {
-    min-height: 0;
-    flex: 1 1 0;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
-    grid-template-rows: minmax(0, 1fr);
-    align-items: stretch;
-    gap: 10px;
-    overflow: hidden;
-  }
-
-  .board-wrap {
-    display: flex;
-    height: 100%;
-    min-height: 0;
-    padding: 11px 12px 9px;
-    flex-direction: column;
-  }
-
-  .board-toolbar,
-  .board-footer {
-    flex: 0 0 auto;
-    height: 22px;
-  }
-
-  .canvas-frame {
-    height: auto;
-    min-height: 0;
-    flex: 1 1 auto;
-    aspect-ratio: auto;
-  }
-
-  .controls {
-    display: grid;
-    height: 100%;
-    min-height: 0;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-    align-content: start;
-    gap: 7px;
-    overflow: hidden;
-  }
-
-  .simulation-block { grid-column: 1; grid-row: 1; }
-  .stats-block { grid-column: 2; grid-row: 1; }
-  .presets-block { grid-column: 1 / -1; grid-row: 2; }
-  .appearance-block { grid-column: 1; grid-row: 3; }
-  .randomize-btn { grid-column: 2; grid-row: 3; }
-
-  .control-block {
-    padding: 9px 10px;
-  }
-
-  .section-head {
-    margin-bottom: 7px;
-  }
-
-  .primary-btn,
-  .step-btn,
-  .randomize-btn {
-    height: 31px;
-    font-size: 10px;
-  }
-
-  .speed-row {
-    margin: 7px 0 3px;
-    font-size: 10px;
-  }
-
-  .speed-row output {
-    font-size: 9px;
-  }
-
-  .preset {
-    min-height: 32px;
-    gap: 7px;
-    padding: 3px 4px;
-  }
-
-  .pattern-icon {
-    width: 22px;
-    height: 22px;
-    background-size: 6px 6px;
-  }
-
-  .preset b {
-    font-size: 10px;
-  }
-
-  .preset small {
-    margin-top: 0;
-    font-size: 8px;
-  }
-
-  .stats-grid {
-    gap: 6px;
-  }
-
-  .stats-grid div + div {
-    padding-left: 6px;
-  }
-
-  .stats-grid small {
-    margin-bottom: 3px;
-    font-size: 7px;
-  }
-
-  .stats-grid strong {
-    font-size: 15px;
-  }
-
-  .population-chart {
-    display: none;
-  }
-
-  .appearance-block {
-    padding-top: 7px;
-    padding-bottom: 7px;
-  }
-
-  .appearance-block .section-head {
-    margin-bottom: 6px;
-  }
-
-  .theme-btn {
-    min-height: 25px;
-    font-size: 8px;
-  }
-
-  .toggle-row {
-    margin-top: 5px;
-    font-size: 10px;
-  }
-
-  .randomize-btn span {
-    margin-right: 5px;
-    font-size: 17px;
-  }
-
-  .page-footer {
-    padding-top: 7px;
-  }
-}
-
-@media (min-width: 601px) and (max-width: 850px) and (max-height: 600px),
-       (min-width: 851px) and (max-height: 600px) {
-  .hero {
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
-  .hero h1 {
-    font-size: clamp(34px, 5vw, 48px);
-  }
-
-  .hero .eyebrow {
-    margin-bottom: 5px;
-    font-size: 9px;
-  }
-
-  .hero .intro,
-  .page-footer {
-    display: none;
-  }
-}
-
-@media (min-width: 601px) and (max-width: 850px) and (max-height: 480px) {
-  .control-block { padding: 5px 8px; }
-  .section-head { margin-bottom: 4px; font-size: 9px; }
-  .primary-btn,
-  .step-btn,
-  .randomize-btn { height: 27px; font-size: 10px; }
-  .speed-row { margin: 4px 0 0; font-size: 10px; }
-  .speed-row output { font-size: 9px; }
-  .preset { min-height: 26px; padding: 2px 3px; }
-  .preset small { display: none; }
-  .pattern-icon { width: 19px; height: 19px; }
-  .random-pattern { line-height: 19px; }
-  .stats-grid small { margin-bottom: 2px; font-size: 7px; }
-  .stats-grid strong { font-size: 14px; }
-  .appearance-block { padding-top: 5px; padding-bottom: 5px; }
-  .theme-btn { min-height: 22px; padding-top: 2px; padding-bottom: 2px; font-size: 7px; }
-  .toggle-row { margin-top: 3px; font-size: 9px; }
-}
-
-/* Settings menu */
 .header-tools {
   display: flex;
   align-items: center;
@@ -1777,12 +1073,13 @@ body[data-theme="light"] .legend-cell.trail { background: var(--cyan); box-shado
 }
 
 .settings-trigger {
-  display: none;
+  display: inline-flex;
   width: 34px;
   height: 34px;
   align-items: center;
   justify-content: center;
   padding: 0;
+  flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--surface);
@@ -1790,312 +1087,14 @@ body[data-theme="light"] .legend-cell.trail { background: var(--cyan); box-shado
   font-size: 17px;
   line-height: 1;
   cursor: pointer;
-}
-
-.settings-trigger:hover,
-.settings-trigger[aria-expanded="true"] {
-  border-color: var(--cyan);
-  background: var(--surface-hover);
-  color: var(--cyan);
-}
-
-.settings-panel {
-  min-width: 0;
-  color: var(--text);
-}
-
-.settings-head {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.settings-head > span {
-  display: block;
-  min-width: 0;
-}
-
-.settings-head b,
-.settings-head small {
-  display: block;
-}
-
-.settings-head b {
-  color: var(--muted-strong);
-  font: 10px var(--mono);
-  letter-spacing: 0.13em;
-}
-
-.settings-head small {
-  margin-top: 3px;
-  overflow: hidden;
-  color: var(--muted);
-  font: 8px var(--mono);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.settings-close {
-  display: none;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.settings-close:hover {
-  border-color: var(--cyan);
-  color: var(--text);
-}
-
-.settings-fields {
-  display: grid;
-  min-width: 0;
-  gap: 6px;
-}
-
-.settings-field {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  align-items: center;
-  gap: 7px;
-  color: var(--muted-strong);
-  font-size: 10px;
-}
-
-.settings-field > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.settings-field select {
-  width: 100%;
-  min-width: 0;
-  height: 27px;
-  padding: 0 5px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  outline: 0;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 9px;
-  cursor: pointer;
-}
-
-.settings-field select:hover,
-.settings-field select:focus {
-  border-color: var(--cyan);
-}
-
-.settings-field select option {
-  background: var(--panel-solid);
-  color: var(--text);
-}
-
-@media (min-width: 851px),
-       (min-width: 701px) and (max-width: 850px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
-  .controls {
-    grid-template-rows: auto auto auto auto;
-  }
-
-  .appearance-block {
-    grid-column: 1;
-    grid-row: 3 / span 2;
-  }
-
-  .randomize-btn {
-    grid-column: 2;
-    grid-row: 3;
-  }
-
-  .settings-panel {
-    display: block;
-    grid-column: 2;
-    grid-row: 4;
-    align-self: start;
-    padding: 9px 10px;
-  }
-
-  .settings-head {
-    margin-bottom: 6px;
-  }
-
-  .settings-head small {
-    display: none;
-  }
-
-  .settings-fields {
-    gap: 4px;
-  }
-
-  .settings-field {
-    gap: 5px;
-    font-size: 8px;
-  }
-
-  .settings-field select {
-    height: 24px;
-    padding: 0 3px;
-    font-size: 8px;
-  }
-}
-
-/* Short desktop rails keep the settings card useful without making the
-   appearance controls or randomize action disappear below the fold. */
-@media (min-width: 851px) and (max-height: 720px),
-       (min-width: 701px) and (max-width: 850px) and (max-height: 720px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) and (max-height: 720px) {
-  .settings-panel {
-    padding: 6px 8px;
-  }
-
-  .settings-head {
-    margin-bottom: 4px;
-  }
-
-  .settings-head b {
-    font-size: 9px;
-  }
-
-  .settings-fields {
-    gap: 3px;
-  }
-
-  .settings-field {
-    gap: 4px;
-    font-size: 7px;
-  }
-
-  .settings-field select {
-    height: 21px;
-    font-size: 7px;
-  }
-}
-
-/* On stacked layouts, the settings card becomes a compact gear menu in the
-   top-right corner so it does not add another long section to the page. */
-@media (max-width: 700px) and (orientation: portrait),
-       (max-width: 600px) {
-  .header-tools {
-    gap: 0;
-  }
-
-  .settings-trigger {
-    display: inline-flex;
-  }
-
-  .settings-panel {
-    position: fixed;
-    z-index: 20;
-    top: calc(env(safe-area-inset-top, 0px) + 58px);
-    right: max(12px, calc(env(safe-area-inset-right, 0px) + 12px));
-    display: none;
-    width: min(320px, calc(100vw - 24px));
-    max-height: calc(100vh - 78px - env(safe-area-inset-top, 0px));
-    overflow: auto;
-    padding: 14px;
-    border: 1px solid var(--line-strong);
-    border-radius: 11px;
-    background: var(--panel);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(20px);
-  }
-
-  .settings-panel.open {
-    display: block;
-  }
-
-  .settings-head {
-    margin-bottom: 12px;
-  }
-
-  .settings-head b {
-    font-size: 11px;
-  }
-
-  .settings-head small {
-    display: block;
-    font-size: 8px;
-  }
-
-  .settings-close {
-    display: block;
-  }
-
-  .settings-fields {
-    gap: 10px;
-  }
-
-  .settings-field {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: 10px;
-    font-size: 11px;
-  }
-
-  .settings-field select {
-    height: 32px;
-    padding: 0 7px;
-    font-size: 10px;
-  }
-}
-
-/* Modal settings window: the same themed card is used from both desktop and
-   mobile entry points, with a light backdrop blur to keep the simulation out of
-   focus while settings are being changed. */
-:root {
-  --modal-backdrop: rgba(5, 10, 20, 0.28);
-}
-
-body[data-theme="light"] {
-  --modal-backdrop: rgba(23, 60, 51, 0.18);
-}
-
-body[data-theme="contrast"] {
-  --modal-backdrop: rgba(0, 0, 0, 0.72);
-}
-
-.settings-backdrop {
-  position: fixed;
-  z-index: 30;
-  inset: 0;
-  background: var(--modal-backdrop);
-  opacity: 0;
-  pointer-events: none;
-  -webkit-backdrop-filter: blur(0);
-  backdrop-filter: blur(0);
-  transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
-}
-
-.settings-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-}
-
-body.settings-open {
-  overflow: hidden;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .settings-desktop-trigger {
   display: none;
   width: 100%;
   min-width: 0;
-  min-height: 48px;
+  min-height: 44px;
   align-items: center;
   gap: 9px;
   padding: 10px 12px;
@@ -2106,14 +1105,22 @@ body.settings-open {
   color: var(--text);
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.settings-desktop-trigger:hover,
-.settings-desktop-trigger[aria-expanded="true"] {
-  border-color: var(--cyan);
+/* Hovering the Settings buttons adopts the main colour — the theme default
+   or whatever is chosen in the Settings colour picker (it overrides --lime
+   on <body>, so this follows the picker automatically). */
+.settings-trigger:hover,
+.settings-desktop-trigger:hover {
+  border-color: var(--lime);
   background: var(--surface-hover);
-  transform: translateY(-1px);
+  color: var(--lime);
+}
+
+.settings-desktop-trigger:hover .settings-button-icon,
+.settings-desktop-trigger:hover .settings-button-copy b {
+  color: var(--lime);
 }
 
 .settings-button-icon {
@@ -2148,11 +1155,25 @@ body.settings-open {
   font: 8px var(--mono);
 }
 
-.settings-button-arrow {
-  margin-left: auto;
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 16px;
+/* Modal backdrop + panel. The panel is always a centered dialog, whichever
+   trigger opened it. */
+.settings-backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  background: var(--modal-backdrop);
+  opacity: 0;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(0);
+  backdrop-filter: blur(0);
+  transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+.settings-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 .settings-panel {
@@ -2162,18 +1183,16 @@ body.settings-open {
   left: 50%;
   display: none;
   width: min(420px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
-  max-height: min(560px, calc(100dvh - 32px));
+  max-height: min(560px, calc(100vh - 32px));
+  max-height: min(560px, calc(100dvh - 32px - env(safe-area-inset-bottom, 0px)));
   overflow: auto;
   padding: 18px;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
-  background: var(--panel);
+  background: var(--panel-solid);
   box-shadow: var(--shadow);
   color: var(--text);
-  transform: translate(-50%, -50%) scale(0.97);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  transform: translate(-50%, -50%);
 }
 
 .settings-panel.open {
@@ -2181,215 +1200,697 @@ body.settings-open {
   animation: settings-pop 0.2s ease-out forwards;
 }
 
-.settings-panel .settings-head {
+@keyframes settings-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.settings-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 14px;
 }
 
-.settings-panel .settings-head small {
+.settings-head > span {
   display: block;
+  min-width: 0;
+}
+
+.settings-head b,
+.settings-head small {
+  display: block;
+}
+
+.settings-head b {
+  color: var(--muted-strong);
+  font: 11px var(--mono);
+  letter-spacing: 0.13em;
+}
+
+.settings-head small {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font: 9px var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-close {
+  display: none;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .settings-panel .settings-close {
   display: block;
 }
 
-.settings-panel .settings-fields {
+.settings-close:hover {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+
+.settings-fields {
+  display: grid;
+  min-width: 0;
   gap: 10px;
 }
 
-.settings-panel .settings-field {
+.settings-field {
+  display: grid;
+  min-width: 0;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
   gap: 10px;
+  color: var(--muted-strong);
   font-size: 11px;
 }
 
-.settings-panel .settings-field select {
+.settings-field > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-field select {
+  width: 100%;
+  min-width: 0;
   height: 32px;
   padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
   font-size: 10px;
+  cursor: pointer;
 }
 
-@keyframes settings-pop {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.settings-field select:hover,
+.settings-field select:focus {
+  border-color: var(--cyan);
 }
 
-@media (min-width: 851px),
-       (min-width: 701px) and (max-width: 850px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
+.settings-field select option {
+  background: var(--panel-solid);
+  color: var(--text);
+}
+
+.color-field {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
+.color-controls {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-swatches {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.color-swatch:hover {
+  border-color: var(--line-strong);
+}
+
+.color-swatch.active {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.settings-field input[type="color"] {
+  width: 46px;
+  height: 32px;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.settings-field input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.settings-field input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.settings-field input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.color-reset {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.color-reset:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+}
+
+/* --------------------------------------------------------------------------
+   7. Phone refinements (portrait and landscape)
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  .app-shell {
+    /* Same inert-on-non-iOS safe-area treatment as the base rule. */
+    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+    padding-left: calc(10px + env(safe-area-inset-left, 0px));
+  }
+
+  .brand {
+    font-size: 20px;
+  }
+
+  .brand-mark {
+    width: 21px;
+    height: 21px;
+  }
+
+  .header-note {
+    display: none;
+  }
+
+  .board-wrap {
+    padding: 11px 10px 9px;
+  }
+
+  .board-toolbar,
+  .board-footer {
+    height: 22px;
+  }
+
+  .canvas-frame {
+    margin-top: 7px;
+    margin-bottom: 7px;
+  }
+
+  .toolbar-actions {
+    gap: 1px;
+  }
+
+  .zoom-control {
+    gap: 1px;
+  }
+
+  .legend,
+  .size-readout {
+    font-size: 8px;
+  }
+
+  /* Hide the painting hint and its separator together — hiding the hint
+     alone used to leave a dangling "·" beside the grid size. */
+  .size-readout .paint-hint,
+  .size-readout .sep {
+    display: none;
+  }
+
+  .control-block {
+    padding: 13px;
+  }
+
+  .section-head {
+    margin-bottom: 10px;
+  }
+
+  .preset {
+    min-height: 38px;
+    gap: 7px;
+    padding: 4px;
+  }
+
+  .preset small {
+    display: none;
+  }
+
+  .pattern-icon {
+    width: 23px;
+    height: 23px;
+  }
+
+  .stats-grid {
+    gap: 8px;
+  }
+
+  .stats-grid div + div {
+    padding-left: 8px;
+  }
+
+  .stats-grid small {
+    font-size: 8px;
+  }
+
+  .theme-options {
+    gap: 3px;
+  }
+
+  .theme-btn {
+    padding-right: 2px;
+    padding-left: 2px;
+    font-size: 8px;
+  }
+
+  .page-footer {
+    padding-top: 16px;
+    font-size: 8px;
+  }
+
+  .page-footer span:last-child {
+    display: none;
+  }
+
+  /* Two-per-row presets keep the rail short enough to scan. */
+  .preset-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .more-presets {
+    grid-column: 1 / -1;
+    min-height: 30px;
+  }
+
+  .preset-more {
+    margin-top: -4px;
+  }
+
+  .preset-more-inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+
+/* Very narrow phones: a single control column. `1 / -1` spans collapse to
+   the only column automatically. */
+@media (max-width: 400px) {
   .controls {
-    grid-template-rows: auto auto auto auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .simulation-block,
+  .stats-block,
+  .presets-block,
+  .appearance-block,
+  .randomize-btn {
+    grid-column: 1;
+  }
+
+  .simulation-block { grid-row: 1; }
+  .stats-block { grid-row: 2; }
+  .presets-block { grid-row: 3; }
+  .appearance-block { grid-row: 4; }
+  .randomize-btn { grid-row: 5; }
+
+  .stats-grid strong {
+    font-size: 17px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. Landscape: the interface always fits, never scrolls
+   --------------------------------------------------------------------------
+   Any landscape viewport wide enough for a board plus a rail (>= 500px)
+   locks the whole app to one viewport height:
+
+   - html/body and .app-shell are exactly one viewport tall, with
+     overflow hidden, so no scrollbar can ever appear.
+   - The workspace flexes to fill the height left by the topbar, hero and
+     footer; the canvas frame absorbs whatever remains (aspect-ratio is
+     dropped — the grid renderer adapts its dimensions to the frame).
+   - Every rail size is a vh-driven clamp, so the rail compresses SMOOTHLY
+     as the window gets shorter. Nothing switches structure on height:
+     two browsers with slightly different chrome merely compress things
+     slightly differently. The rail also carries an overflow-y: auto
+     safety valve that only engages on absurdly short windows.
+   - Very short landscape windows drop purely decorative copy (the hero
+     intro, the footer, then the hero itself) — the board and its controls
+     are the product and always stay reachable.
+
+   Portrait viewports and sub-500px landscape windows keep the scrolling
+   stacked layout from the base styles.
+   -------------------------------------------------------------------------- */
+
+@media (orientation: landscape) and (min-width: 500px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .app-shell {
+    height: 100%;
+    height: 100dvh;
+    min-height: 0;
+    padding-top: clamp(6px, 1.6vh, 28px);
+    padding-bottom: clamp(6px, 1.4vh, 20px);
+  }
+
+  .hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    padding: clamp(8px, 3vh, 56px) 4px clamp(6px, 2vh, 36px);
+  }
+
+  .eyebrow {
+    margin-bottom: clamp(4px, 1.2vh, 16px);
+    font-size: clamp(8px, 1.1vh, 11px);
+  }
+
+  .hero h1 {
+    font-size: clamp(20px, min(5.5vw, 8.5vh), 84px);
+  }
+
+  .intro {
+    max-width: 280px;
+    margin: 0 5% 6px 0;
+    font-size: clamp(10px, 1.5vh, 14px);
+  }
+
+  .workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, min(32vw, 340px));
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    gap: clamp(8px, 1.2vw, 24px);
+  }
+
+  .board-wrap {
+    min-height: 0;
+    padding: clamp(6px, 1.6vh, 15px) clamp(8px, 1.2vw, 15px)
+      clamp(5px, 1.4vh, 12px);
+  }
+
+  .board-toolbar,
+  .board-footer {
+    height: clamp(18px, 2.8vh, 26px);
+  }
+
+  .zoom-control {
+    height: clamp(19px, 2.9vh, 28px);
+    font-size: clamp(7px, 1vh, 9px);
+  }
+
+  .zoom-control button {
+    font-size: clamp(12px, 1.8vh, 16px);
+  }
+
+  .icon-btn {
+    padding: clamp(2px, 0.8vh, 5px) 7px;
+    font-size: clamp(13px, 1.9vh, 17px);
+  }
+
+  .fit-icon {
+    font-size: clamp(13px, 1.9vh, 18px);
+  }
+
+  .canvas-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    aspect-ratio: auto;
+    margin: clamp(4px, 1vh, 12px) 0 clamp(3px, 0.8vh, 10px);
+  }
+
+  .controls {
+    min-height: 0;
+    overflow-y: auto; /* safety valve; content is sized to fit */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Rows share the extra height, so the rail's cards span exactly the
+       same height as the board column beside them (which itself flexes
+       with the viewport). Falls back to natural heights when the content
+       already fills the rail. */
+    align-content: stretch;
+    gap: clamp(4px, 1.1vh, 9px);
+  }
+
+  .simulation-block { grid-column: 1; grid-row: 1; }
+  .stats-block { grid-column: 2; grid-row: 1; }
+  .presets-block { grid-column: 1 / -1; grid-row: 2; }
+  .appearance-block { grid-column: 1 / -1; grid-row: 3; }
+  .randomize-btn { grid-column: 1; grid-row: 4; }
+  .settings-desktop-trigger { grid-column: 2; grid-row: 4; display: flex; }
+
+  .settings-trigger {
+    display: none;
+  }
+
+  .header-note {
+    display: flex;
+  }
+
+  .control-block {
+    padding: clamp(5px, 1.6vh, 13px) clamp(7px, 1vw, 14px);
+  }
+
+  .section-head {
+    margin-bottom: clamp(4px, 1.1vh, 10px);
+    font-size: clamp(7px, 1vh, 10px);
+  }
+
+  .transport {
+    gap: clamp(4px, 0.6vw, 7px);
+  }
+
+  .primary-btn,
+  .step-btn,
+  .randomize-btn {
+    height: clamp(24px, 3.8vh, 36px);
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: clamp(9px, 1.2vh, 11px);
+    white-space: nowrap;
+  }
+
+  .speed-row {
+    margin: clamp(3px, 1.2vh, 12px) 0 clamp(2px, 0.8vh, 7px);
+    font-size: clamp(8px, 1.1vh, 11px);
+  }
+
+  input[type="range"] {
+    height: clamp(10px, 1.6vh, 16px);
+  }
+
+  .presets-block {
+    padding-bottom: clamp(3px, 0.9vh, 8px);
+  }
+
+  /* Presets render as a stable palette beside the board — all six of them,
+     since the rail is the primary surface in landscape. */
+  .preset-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2px, 0.6vh, 3px);
+  }
+
+  /* The animated wrapper goes layout-transparent here: every preset
+     becomes a direct child of the two-column palette, always visible.
+     visibility must be reset explicitly — it inherits through
+     display: contents, so the base collapsed-state hidden would
+     otherwise render these presets invisible even though they occupy
+     grid cells. */
+  .preset-more,
+  .preset-more-inner {
+    display: contents;
+    visibility: visible;
+  }
+
+  .more-presets {
+    display: none;
+  }
+
+  .preset {
+    min-height: clamp(24px, 3.6vh, 40px);
+    gap: 7px;
+    padding: clamp(2px, 0.7vh, 5px) 4px;
+  }
+
+  .preset b {
+    font-size: clamp(8px, 1.1vh, 10px);
+  }
+
+  .preset small {
+    margin-top: 0;
+    font-size: clamp(6px, 0.9vh, 8px);
+  }
+
+  .pattern-icon {
+    width: clamp(16px, 2.6vh, 22px);
+    height: clamp(16px, 2.6vh, 22px);
+    flex-basis: clamp(16px, 2.6vh, 22px);
+  }
+
+  .stats-grid {
+    gap: clamp(6px, 1.2vw, 12px);
+  }
+
+  .stats-grid div + div {
+    padding-left: clamp(6px, 1.2vw, 12px);
+  }
+
+  .stats-grid strong {
+    font-size: clamp(11px, 1.9vh, 17px);
+  }
+
+  .population-chart {
+    display: block;
+    margin-top: clamp(4px, 1vh, 10px);
+  }
+
+  /* width:100% is the fix for the "half a chart" bug: without it the canvas
+     rendered at its intrinsic bitmap size (rect × dpr), which at dpr 2 is
+     twice the container, and overflow:hidden clipped it to the left half. */
+  .population-chart canvas {
+    display: block;
+    width: 100%;
+    height: clamp(14px, 4.2vh, 42px);
   }
 
   .appearance-block {
-    grid-column: 1;
-    grid-row: 3 / span 2;
+    padding: clamp(5px, 1.4vh, 12px) clamp(7px, 1vw, 14px);
   }
 
-  .randomize-btn {
-    grid-column: 2;
-    grid-row: 3;
+  .appearance-block .section-head {
+    margin-bottom: clamp(4px, 1vh, 9px);
   }
 
+  .theme-btn {
+    min-height: clamp(18px, 2.8vh, 28px);
+    font-size: clamp(7px, 1vh, 9px);
+  }
+
+  .toggle-row {
+    margin-top: clamp(3px, 0.9vh, 10px);
+    font-size: clamp(8px, 1.1vh, 11px);
+  }
+
+  /* Randomize and Settings sit side by side in row 4 of the rail. The pair
+     now FILLS its rail track instead of hugging the bottom at a fixed
+     height: the rail's rows share the leftover height that makes the
+     column match the board, and a bottom-anchored fixed-height pair left
+     that share sitting as a dead band between the Appearance card and the
+     buttons. Filling the track puts the gap above the pair at the rail's
+     own row gap (same as between every other card), and the buttons grow
+     just enough to absorb the extra height — never below the transport
+     button floor. Both boxes stay identical: the min-height here also
+     overrides the trigger's base 44px. */
+  .randomize-btn,
   .settings-desktop-trigger {
-    display: flex;
-    grid-column: 2;
-    grid-row: 4;
+    height: auto;
+    min-height: clamp(24px, 3.8vh, 36px);
+    padding: 0 clamp(6px, 0.8vw, 10px);
   }
-}
 
-@media (min-width: 851px) and (max-height: 720px),
-       (min-width: 701px) and (max-width: 850px) and (max-height: 720px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) and (max-height: 720px) {
-  .settings-desktop-trigger {
-    min-height: 42px;
-    padding: 7px 9px;
+  /* Matching icon sizes so the pair reads as one set. */
+  .randomize-btn span {
+    font-size: 16px;
+    vertical-align: -2px;
+  }
+
+  .settings-button-icon {
+    font-size: 16px;
   }
 
   .settings-button-copy small {
     display: none;
   }
 
-  .settings-panel {
-    padding: 14px;
-  }
-}
-
-@media (max-width: 700px) and (orientation: portrait),
-       (max-width: 600px) {
-  .settings-desktop-trigger {
-    display: none;
-  }
-}
-
-/* Header affordance switch: stacked layouts get the gear, wider layouts keep
-   the cellular-automata status line. Never render both in the same compact
-   header, where the note can wrap underneath the icon. */
-@media (max-width: 700px) and (orientation: portrait),
-       (max-width: 600px) {
-  .header-note {
-    display: none;
-  }
-
-  .settings-trigger {
-    display: inline-flex;
-  }
-}
-
-@media (min-width: 701px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
-  .header-note {
-    display: flex;
-  }
-
-  .settings-trigger {
-    display: none;
-  }
-}
-
-/* The desktop settings trigger follows Randomize in the right rail. Use a
-   tighter row gap there so the two related actions read as one group. */
-@media (min-width: 851px),
-       (min-width: 701px) and (max-width: 850px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
-  .controls {
-    row-gap: 3px;
-  }
-}
-
-/* Keep the desktop settings action visually attached to Randomize. Pull only
-   this following card up by the existing row gap so the other control groups
-   retain their breathing room. */
-@media (min-width: 851px),
-       (min-width: 701px) and (max-width: 850px),
-       (min-width: 601px) and (max-width: 700px) and (orientation: landscape) {
-  .settings-desktop-trigger {
-    margin-top: -3px;
-  }
-}
-
-
-/* ============================================================
-   Cross-browser desktop layout
-   The previous stylesheet changed the preset palette based on
-   viewport HEIGHT. That made Arc and Brave render different
-   layouts at the same apparent window size. Desktop controls
-   now use a stable two-column preset palette.
-   ============================================================ */
-
-@media (min-width: 851px) {
-  html {
-    min-height: 100%;
-  }
-
-  body {
-    min-height: 100vh;
-    min-height: 100dvh;
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  .app-shell {
-    min-height: 100vh;
-    min-height: 100dvh;
-    height: auto;
-    overflow: visible;
-  }
-
-  .workspace {
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .controls {
-    min-width: 0;
-    height: auto;
-    overflow: visible;
-  }
-
-  .preset-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 3px;
-  }
-
-  .preset {
-    min-width: 0;
-    min-height: 40px;
-    padding: 5px 4px;
-    gap: 7px;
-  }
-
-  .pattern-icon {
-    width: 22px;
-    height: 22px;
-    flex-basis: 22px;
-    background-size: 6px 6px;
-  }
-
-  .preset b {
-    font-size: 10px;
-  }
-
-  .preset small {
-    margin-top: 0;
-    font-size: 8px;
-  }
-
   .page-footer {
-    padding-top: 14px;
+    margin-top: 0;
+    padding-top: clamp(4px, 1.6vh, 24px);
   }
 }
 
-/* Never allow the canvas frame to force a grid/flex child wider than its
-   computed column. */
-.canvas-frame {
-  min-width: 0;
-  max-width: 100%;
+/* Short landscape windows drop the decorative copy first. */
+@media (orientation: landscape) and (min-width: 500px) and (max-height: 540px) {
+  .intro,
+  .page-footer {
+    display: none;
+  }
 }
 
-.canvas-frame canvas {
-  display: block;
-  max-width: 100%;
+/* Very short landscape windows (phone landscape) drop the hero as well —
+   the board and its controls are the product. */
+@media (orientation: landscape) and (min-width: 500px) and (max-height: 400px) {
+  .hero {
+    display: none;
+  }
+}
+
+/* Extremely short windows give up the population chart too. Beyond this
+   point only sliver-sized windows remain; the rail's overflow-y safety
+   valve keeps every control reachable even there. */
+@media (orientation: landscape) and (min-width: 500px) and (max-height: 340px) {
+  .population-chart {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. Reduced motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

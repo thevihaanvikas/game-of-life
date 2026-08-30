@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 37 37">
-  <title>Life logo</title>
-  <g transform="rotate(45 12.5 12.5)" fill="#ffff00">
-    <rect width="6.333" height="6.333" rx="1" opacity=".45"/>
-    <rect x="9.333" width="6.333" height="6.333" rx="1"/>
-    <rect x="9.333" y="9.333" width="6.333" height="6.333" rx="1"/>
-    <rect x="18.666" y="18.666" width="6.333" height="6.333" rx="1"/>
-  </g>
-</svg>

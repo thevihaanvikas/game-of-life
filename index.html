@@ -4,15 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Conway's Game of Life</title>
-  <meta id="themeColor" name="theme-color" content="#090d1b" />
+  <meta name="description" content="Paint a world, set it in motion, and watch simple rules make something alive. An interactive Conway's Game of Life with pattern presets, themes, trails and a live population graph." />
+  <!-- Share cards (Open Graph + Twitter). og-image.png is a real
+       screenshot of the app at 1200x630 — regenerate it if the design
+       changes significantly. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="life." />
+  <meta property="og:title" content="Conway's Game of Life" />
+  <meta property="og:description" content="Paint a world, set it in motion, and watch simple rules make something alive — pattern presets, themes, trails and a live population graph." />
+  <meta property="og:url" content="https://thevihaanvikas.github.io/game-of-life/" />
+  <meta property="og:image" content="https://thevihaanvikas.github.io/game-of-life/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The life. Game of Life simulator: an evolving cell grid beside its pattern presets and a live population graph." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Conway's Game of Life" />
+  <meta name="twitter:description" content="Paint a world, set it in motion, and watch simple rules make something alive." />
+  <meta name="twitter:image" content="https://thevihaanvikas.github.io/game-of-life/og-image.png" />
+  <meta id="themeColor" name="theme-color" content="#000000" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <link id="favicon" rel="icon" type="image/svg+xml" href="favicon.svg" />
 </head>
-<body data-theme="dark">
-  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<body>
   <div class="settings-backdrop" id="settingsBackdrop" aria-hidden="true"></div>
   <main class="app-shell">
     <header class="topbar">
@@ -43,11 +59,11 @@
         </div>
         <div class="canvas-frame" id="canvasFrame">
           <canvas id="lifeCanvas" aria-label="Interactive Game of Life grid"></canvas>
-          <div class="empty-hint" id="emptyHint"><span>✦</span><strong>Paint your first cell</strong><small>Click or drag across the grid</small></div>
+          <div class="empty-hint" id="emptyHint"><span>✦</span><strong>Paint your first cell</strong><small><span class="pc-only">Click</span><span class="touch-only">Tap</span> or drag across the grid</small></div>
         </div>
         <div class="board-footer">
-          <div class="legend"><span class="legend-cell on"></span> Alive / age <span class="legend-cell trail"></span> Trail</div>
-          <div class="size-readout"><span id="gridReadout">48 × 30</span><span class="sep">·</span><span>drag to paint</span></div>
+          <div class="legend"><span class="legend-cell on"></span> Life</div>
+          <div class="size-readout"><span id="gridReadout">48 × 30</span><span class="sep">·</span><span class="paint-hint"><span class="pc-only">drag to paint · right-drag erases</span><span class="touch-only">drag to paint</span></span></div>
         </div>
       </div>
 
@@ -56,34 +72,40 @@
           <div class="section-head"><span>SIMULATION</span><span class="kbd">SPACE</span></div>
           <div class="transport">
             <button class="primary-btn" id="playBtn" type="button" aria-pressed="false"><span class="play-icon">▶</span><span id="playLabel">Play</span></button>
-            <button class="step-btn" id="stepBtn"><span>→</span> Step</button>
+            <button class="step-btn" id="stepBtn" title="Advance one generation">+1 gen</button>
           </div>
           <div class="speed-row"><label for="speedRange">Speed</label><output id="speedValue">8 gen/s</output></div>
           <input id="speedRange" type="range" min="1" max="20" value="8" />
         </div>
 
         <div class="control-block presets-block">
-          <div class="section-head"><span>PATTERN PRESETS</span><span class="sparkle">✦</span></div>
-          <div class="preset-list">
-            <button class="preset active" data-pattern="blank"><span class="pattern-icon blank-pattern"></span><span><b>Blank canvas</b><small>Start from scratch</small></span><span class="arrow">↗</span></button>
-            <button class="preset" data-pattern="glider"><span class="pattern-icon glider-pattern"><i></i><i></i><i></i></span><span><b>Glider</b><small>Small &amp; steady</small></span><span class="arrow">↗</span></button>
-            <button class="preset" data-pattern="gun"><span class="pattern-icon gun-pattern"></span><span><b>Gosper gun</b><small>Infinite movement</small></span><span class="arrow">↗</span></button>
-            <button class="preset" data-pattern="random"><span class="pattern-icon random-pattern">⁙</span><span><b>Random field</b><small>Find the unexpected</small></span><span class="arrow">↗</span></button>
+          <div class="section-head"><span>PATTERN PRESETS</span></div>
+          <div class="preset-list" id="presetList">
+            <button class="preset" data-pattern="glider"><span class="pattern-icon glider-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/><rect x="2.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Glider</b><small>Small &amp; steady</small></span></button>
+            <button class="preset" data-pattern="gun"><span class="pattern-icon gun-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="0.1" width="0.8" height="0.8"/></svg></span><span><b>Gosper gun</b><small>Infinite movement</small></span></button>
+            <button class="preset" data-pattern="pulsar"><span class="pattern-icon pulsar-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Pulsar</b><small>Period-3 beacon</small></span></button>
+            <button class="preset" data-pattern="lwss"><span class="pattern-icon lwss-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/></svg></span><span><b>Spaceship</b><small>Traveling ship</small></span></button>
+            <div class="preset-more"><div class="preset-more-inner">
+            <button class="preset extra" data-pattern="penta"><span class="pattern-icon penta-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Pentadecathlon</b><small>Period-15 pulse</small></span></button>
+            <button class="preset extra" data-pattern="rpentomino"><span class="pattern-icon rpentomino-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="2.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>R-pentomino</b><small>Evolves for ages</small></span></button>
+            <button class="preset extra" data-pattern="acorn"><span class="pattern-icon acorn-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="2.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Acorn</b><small>Grows for 5206 gens</small></span></button>
+            <button class="preset extra" data-pattern="diehard"><span class="pattern-icon diehard-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="0.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><circle cx="2.2" cy="2.2" r="0.4"/></svg></span><span><b>Diehard</b><small>Dies at generation 130</small></span></button>
+            </div></div>
+            <button class="more-presets" id="morePresets" type="button" aria-expanded="false" aria-controls="presetList"><span class="label">More presets</span><span class="chev" aria-hidden="true">▾</span></button>
           </div>
         </div>
 
         <div class="control-block stats-block">
-          <div class="section-head"><span>LIVE STATS</span><span class="pulse-line">⌁</span></div>
+          <div class="section-head"><span>LIVE STATS</span></div>
           <div class="stats-grid"><div><small>GENERATION</small><strong id="generation">00000</strong></div><div><small>POPULATION</small><strong id="population">0000</strong></div></div>
-          <div class="population-chart" aria-label="Population over generations"><span>POPULATION / GENERATION</span><canvas id="populationChart"></canvas></div>
+          <div class="population-chart" aria-label="Population over generations"><canvas id="populationChart"></canvas></div>
         </div>
 
         <div class="control-block appearance-block">
-          <div class="section-head"><span>APPEARANCE</span><span class="sparkle">◐</span></div>
+          <div class="section-head"><span>APPEARANCE</span></div>
           <div class="theme-options" role="group" aria-label="Color theme">
-            <button class="theme-btn active" data-theme="dark">Dark glass</button>
+            <button class="theme-btn active" data-theme="dark">Dark</button>
             <button class="theme-btn" data-theme="light">Light</button>
-            <button class="theme-btn" data-theme="contrast">High contrast</button>
           </div>
           <label class="toggle-row"><span>Trail mode <small>afterimages</small></span><input id="trailToggle" type="checkbox" checked /><i></i></label>
         </div>
@@ -92,12 +114,11 @@
         <button class="settings-desktop-trigger control-block" id="settingsDesktopTrigger" type="button" aria-label="Open settings" aria-controls="settingsPanel" aria-expanded="false">
           <span class="settings-button-icon" aria-hidden="true">⚙</span>
           <span class="settings-button-copy"><b>SETTINGS</b><small>World and startup options</small></span>
-          <span class="settings-button-arrow" aria-hidden="true">↗</span>
         </button>
 
       </aside>
     </section>
-    <footer class="page-footer"><span>RULES: BIRTH 3 · SURVIVAL 2—3</span><span>BUILT FOR CURIOSITY <b>♥</b></span></footer>
+    <footer class="page-footer"><span>RULES: BIRTH 3 · SURVIVAL 2—3</span><span>BUILT FOR CURIOSITY <b>★</b></span></footer>
   </main>
 
   <section class="settings-panel control-block" id="settingsPanel" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Settings">
@@ -106,24 +127,6 @@
       <button class="settings-close" id="settingsClose" type="button" aria-label="Close settings">×</button>
     </div>
     <div class="settings-fields">
-      <label class="settings-field" for="gridSize">
-        <span>Grid size</span>
-        <select id="gridSize">
-          <option value="responsive">Responsive</option>
-          <option value="compact">Compact · 40 × 20</option>
-          <option value="standard">Standard · 48 × 30</option>
-          <option value="large">Large · 72 × 45</option>
-        </select>
-      </label>
-      <label class="settings-field" for="patternSelect">
-        <span>Built-in pattern</span>
-        <select id="patternSelect">
-          <option value="blank">Blank canvas</option>
-          <option value="glider">Glider</option>
-          <option value="gun">Gosper gun</option>
-          <option value="random">Random field</option>
-        </select>
-      </label>
       <label class="settings-field" for="boundaryMode">
         <span>Edge behavior</span>
         <select id="boundaryMode">
@@ -131,6 +134,21 @@
           <option value="bounded">Bounded edges</option>
         </select>
       </label>
+      <div class="settings-field color-field">
+        <span id="mainColorLabel">Main color</span>
+        <div class="color-controls">
+          <div class="color-swatches" role="group" aria-label="Preset main colours">
+            <button type="button" class="color-swatch" data-color="#00ff00" style="background: #00ff00" aria-label="Green" aria-pressed="false"></button>
+            <button type="button" class="color-swatch" data-color="#00ffff" style="background: #00ffff" aria-label="Cyan" aria-pressed="false"></button>
+            <button type="button" class="color-swatch" data-color="#ffb000" style="background: #ffb000" aria-label="Amber" aria-pressed="false"></button>
+            <button type="button" class="color-swatch" data-color="#ff8800" style="background: #ff8800" aria-label="Orange" aria-pressed="false"></button>
+            <button type="button" class="color-swatch" data-color="#ff4fd8" style="background: #ff4fd8" aria-label="Magenta" aria-pressed="false"></button>
+            <button type="button" class="color-swatch" data-color="#ffffff" style="background: #ffffff" aria-label="White" aria-pressed="false"></button>
+          </div>
+          <input type="color" id="mainColor" value="#00ff00" aria-labelledby="mainColorLabel" />
+          <button type="button" id="mainColorReset" class="color-reset">Reset</button>
+        </div>
+      </div>
     </div>
   </section>
   <script src="app.js"></script>
