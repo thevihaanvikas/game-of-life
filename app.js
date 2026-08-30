@@ -15,7 +15,6 @@ const speedValue = document.getElementById('speedValue');
 const gridReadout = document.getElementById('gridReadout');
 const themeColorMeta = document.getElementById('themeColor');
 const faviconLink = document.getElementById('favicon');
-const patternSelect = document.getElementById('patternSelect');
 const boundaryModeSelect = document.getElementById('boundaryMode');
 const settingsTrigger = document.getElementById('settingsTrigger');
 const settingsDesktopTrigger = document.getElementById('settingsDesktopTrigger');
@@ -58,14 +57,46 @@ const themeColors = {
     accent: '#00ffff',
     background: '#000000',
     grid: 'rgba(255, 255, 255, 0.36)',
+    // Freshly-born cells blend from near-white toward the alive colour.
+    fresh: '#ffffff',
   },
   light: {
     alive: '#00b300',
     accent: '#16718a',
     background: '#ffffff',
     grid: 'rgba(0, 0, 0, 0.36)',
+    // Mirror of dark: fresh cells blend from near-black toward the colour.
+    fresh: '#000000',
   },
 };
+
+const AGE_RAMP_STEPS = 18;
+let cellColorRamp = [];
+let cellColorRampKey = '';
+
+function hexToRgb(hex) {
+  const value = hex.replace('#', '');
+  return [
+    parseInt(value.slice(0, 2), 16),
+    parseInt(value.slice(2, 4), 16),
+    parseInt(value.slice(4, 6), 16),
+  ];
+}
+
+function buildCellColorRamp(alive, fresh) {
+  const [aliveR, aliveG, aliveB] = hexToRgb(alive);
+  const [freshR, freshG, freshB] = hexToRgb(fresh);
+  const ramp = [];
+  for (let step = 0; step <= AGE_RAMP_STEPS; step += 1) {
+    const progress = step / AGE_RAMP_STEPS;
+    ramp.push(
+      `rgb(${Math.round(freshR + (aliveR - freshR) * progress)}, ` +
+      `${Math.round(freshG + (aliveG - freshG) * progress)}, ` +
+      `${Math.round(freshB + (aliveB - freshB) * progress)})`,
+    );
+  }
+  return ramp;
+}
 
 const metaThemeColors = {
   dark: '#000000',
@@ -271,7 +302,12 @@ function draw(now = performance.now()) {
   const { width, height, cell, left, top } = gridGeometry();
   if (!width || !height) return;
 
-  const { alive, accent, background, grid } = colorsForTheme();
+  const { alive, accent, background, grid, fresh } = colorsForTheme();
+  const rampKey = alive + fresh;
+  if (cellColorRampKey !== rampKey) {
+    cellColorRamp = buildCellColorRamp(alive, fresh);
+    cellColorRampKey = rampKey;
+  }
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
@@ -324,13 +360,12 @@ function draw(now = performance.now()) {
       }
 
       if (value) {
-        const age = Math.min(1, ages[y][x] / 18);
-        ctx.fillStyle = alive;
-        // Fresh cells sit at 82% opacity so they read as clearly alive from
-        // the first generation; surviving cells still brighten to full.
-        ctx.globalAlpha = 0.82 + age * 0.18;
+        // Freshly-born cells render near-white (dark theme) or near-black
+        // (light theme) with a tint of the alive colour, then settle into
+        // the alive colour as they survive — far more prominent than the
+        // old alpha fade.
+        ctx.fillStyle = cellColorRamp[Math.min(AGE_RAMP_STEPS, ages[y][x])];
         ctx.fillRect(xPosition, yPosition, cellDrawSize, cellDrawSize);
-        ctx.globalAlpha = 1;
       }
     }
   }
@@ -489,7 +524,6 @@ function selectPreset(name) {
   document.querySelectorAll('.preset').forEach((button) => {
     button.classList.toggle('active', button.dataset.pattern === name);
   });
-  if (patternSelect) patternSelect.value = name || '';
 }
 
 function place(pattern, offsetX, offsetY) {
@@ -647,7 +681,6 @@ settingsTrigger.addEventListener('click', () => toggleSettings(settingsTrigger))
 settingsDesktopTrigger.addEventListener('click', () => toggleSettings(settingsDesktopTrigger));
 settingsClose.addEventListener('click', () => setSettingsOpen(false));
 settingsBackdrop.addEventListener('click', () => setSettingsOpen(false));
-patternSelect.addEventListener('change', (event) => loadPattern(event.target.value));
 boundaryModeSelect.addEventListener('change', (event) => {
   boundaryMode = event.target.value === 'bounded' ? 'bounded' : 'wrap';
 });
@@ -801,7 +834,12 @@ updateGridReadout();
 speedValue.textContent = `${speedRange.value} gen/s`;
 updateZoom();
 setSettingsOpen(false);
-applyTheme(currentTheme());
+// Start on the system theme; the user's explicit choice (this session)
+// always wins afterwards.
+const systemPrefersLight =
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-color-scheme: light)').matches;
+applyTheme(systemPrefersLight ? 'light' : 'dark');
 
 let storedMainColor = null;
 try {

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link id="favicon" rel="icon" type="image/svg+xml" href="favicon.svg" />
 </head>
-<body data-theme="dark">
+<body>
   <div class="settings-backdrop" id="settingsBackdrop" aria-hidden="true"></div>
   <main class="app-shell">
     <header class="topbar">
@@ -104,15 +104,6 @@
       <button class="settings-close" id="settingsClose" type="button" aria-label="Close settings">×</button>
     </div>
     <div class="settings-fields">
-      <label class="settings-field" for="patternSelect">
-        <span>Built-in pattern</span>
-        <select id="patternSelect">
-          <option value="blank">Blank canvas</option>
-          <option value="glider">Glider</option>
-          <option value="gun">Gosper gun</option>
-          <option value="random">Random field</option>
-        </select>
-      </label>
       <label class="settings-field" for="boundaryMode">
         <span>Edge behavior</span>
         <select id="boundaryMode">

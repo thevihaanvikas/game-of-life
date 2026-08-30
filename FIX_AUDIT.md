@@ -1,3 +1,29 @@
+# Age colour ramp, system theme & settings polish v9
+
+- **Prominent cell-age effect**: the old 82%→100% opacity fade was too
+  subtle. Cells now render through a 19-step colour ramp: freshly drawn
+  cells are **near-white with a tint of the alive colour** in dark mode
+  (near-black with a tint in light mode — the mirror image, so it pops
+  on white too) and settle into the full alive colour over 18
+  generations, at full opacity throughout. The ramp follows the theme
+  AND the custom main colour from the Settings picker, and is cached per
+  colour pair so per-cell drawing is still a plain array lookup.
+- **System theme on startup**: the hardcoded `data-theme="dark"` on
+  `<body>` is gone; the app reads `prefers-color-scheme` at boot and
+  applies dark or light (favicon and meta theme-color follow). An
+  explicit choice via the theme buttons still wins for the session.
+- **Settings button hover**: after v8 removed the hover outright, the
+  SETTINGS card and the header gear button now get exactly the
+  Randomize button's hover treatment — `border-color: var(--line-strong)`
+  + `background: var(--surface-hover)` with the same 0.2s easing (no
+  lift, no cyan).
+- **Built-in pattern option removed** from the Settings panel — the
+  preset list in the rail already covers it. All `patternSelect`
+  references (element ref, change listener, sync in `selectPreset`)
+  are gone.
+
+---
+
 # Main-colour picker & settings hover v8
 
 - **Main colour picker** in the Settings panel (next to the pattern and

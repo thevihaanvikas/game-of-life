@@ -962,6 +962,7 @@ input[type="range"] {
   font-size: 17px;
   line-height: 1;
   cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .settings-desktop-trigger {
@@ -979,6 +980,14 @@ input[type="range"] {
   color: var(--text);
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Same hover treatment as the Randomize button it sits beside. */
+.settings-trigger:hover,
+.settings-desktop-trigger:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
 }
 
 .settings-button-icon {
