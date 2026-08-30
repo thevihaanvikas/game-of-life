@@ -1,3 +1,27 @@
+# Input & chrome polish v16
+
+- **Left-drag paints, right-drag erases** (mouse only): the pointer
+  handler now reads the button — 0 paints, 2 erases, others are
+  ignored — and a `contextmenu` listener on the canvas suppresses the
+  browser menu so an erase stroke is never interrupted (it also stops
+  long-press menus stealing touch strokes). Touch/pen keep the old
+  toggle behaviour. The board footer hint now reads
+  "drag to paint · right-drag erases".
+- **Speed slider**: `accent-color` (which painted the track with the
+  theme accent) replaced with fully custom styling — a neutral grey
+  `#8a8a8a` track in both themes; the round thumb keeps the main
+  colour, so it still follows the colour picker.
+- **"POPULATION / GENERATION"** label above the graph removed (with
+  its CSS).
+- **Section-head icons removed** (✦, ⌁, ◐); only the SIMULATION
+  shortcut remains, now rendered as a keycap placed directly beside
+  its label instead of floating in the far corner.
+- **Arrow glyphs removed** from every preset button and the Settings
+  button (plus their CSS, including the landscape override).
+- **Footer**: the heart in "BUILT FOR CURIOSITY" is now a star (★).
+
+---
+
 # Custom colour re-themes every accent v15
 
 A custom main colour previously re-themed only the green elements

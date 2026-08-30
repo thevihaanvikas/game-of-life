@@ -550,7 +550,7 @@ a:focus-visible {
   display: flex;
   min-width: 0;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
   margin-bottom: 12px;
   color: var(--muted);
@@ -564,12 +564,15 @@ a:focus-visible {
   white-space: nowrap;
 }
 
-.kbd,
-.sparkle,
-.pulse-line {
+/* Shortcut keys sit directly beside their section label as keycaps. */
+.kbd {
   flex: 0 0 auto;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
   color: var(--muted);
-  letter-spacing: 0;
+  font-size: 8px;
+  letter-spacing: 0.08em;
 }
 
 .transport {
@@ -633,14 +636,49 @@ a:focus-visible {
   white-space: nowrap;
 }
 
+/* Speed slider: a neutral grey track in BOTH themes (the accent-coloured
+   thumb still follows the main colour). Fully custom-styled, since
+   accent-color would paint the track with the theme accent. */
 input[type="range"] {
   display: block;
   width: 100%;
   min-width: 0;
   height: 16px;
   margin: 0;
-  accent-color: var(--lime);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
   cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #8a8a8a;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--lime);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #8a8a8a;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--lime);
 }
 
 .presets-block {
@@ -676,10 +714,6 @@ input[type="range"] {
   background: var(--surface);
 }
 
-.preset.active .arrow {
-  color: var(--lime);
-}
-
 .pattern-icon {
   position: relative;
   display: block;
@@ -711,13 +745,6 @@ input[type="range"] {
   margin-top: 3px;
   color: var(--muted);
   font: 9px var(--mono);
-}
-
-.arrow {
-  margin-left: auto;
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 16px;
 }
 
 /* Every preset icon is a single inline SVG on a 3×3 viewBox: it scales with
@@ -861,14 +888,6 @@ input[type="range"] {
    queries); its canvas is sized there. */
 .population-chart {
   display: none;
-}
-
-.population-chart > span {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--muted);
-  font: 8px var(--mono);
-  letter-spacing: 0.08em;
 }
 
 .appearance-block {
@@ -1103,13 +1122,6 @@ input[type="range"] {
   margin-top: 3px;
   color: var(--muted);
   font: 8px var(--mono);
-}
-
-.settings-button-arrow {
-  margin-left: auto;
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 16px;
 }
 
 /* Modal backdrop + panel. The panel is always a centered dialog, whichever
@@ -1425,10 +1437,6 @@ input[type="range"] {
 
   .preset small {
     display: none;
-  }
-
-  .preset .arrow {
-    font-size: 13px;
   }
 
   .pattern-icon {

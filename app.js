@@ -707,6 +707,13 @@ function finishDrawing(event) {
 
 canvas.addEventListener('pointerdown', (event) => {
   event.preventDefault();
+  // Mouse: left button (0) paints, right button (2) erases; other buttons
+  // are ignored. Touch and pen keep the toggle behaviour (the inverse of
+  // the first cell touched), since they have no right button.
+  if (event.pointerType === 'mouse' && event.button !== 0 && event.button !== 2) {
+    drawing = false;
+    return;
+  }
   const [x, y] = cellFromEvent(event);
   if (x < 0 || x >= cols || y < 0 || y >= rows) {
     drawing = false;
@@ -715,13 +722,20 @@ canvas.addEventListener('pointerdown', (event) => {
 
   drawing = true;
   canvas.setPointerCapture(event.pointerId);
-  drawValue = !cells[y][x];
+  drawValue = event.pointerType === 'mouse' ? event.button !== 2 : !cells[y][x];
   if (paintCell(x, y, drawValue)) {
     selectPreset('');
     updateManualHistory();
     draw();
     scheduleEffects();
   }
+});
+
+canvas.addEventListener('contextmenu', (event) => {
+  // Right-drag is the eraser; suppress the browser's context menu so it
+  // never interrupts an erase stroke (this also stops long-press menus
+  // from stealing touch strokes).
+  event.preventDefault();
 });
 
 canvas.addEventListener('pointermove', (event) => {

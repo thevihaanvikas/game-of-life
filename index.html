@@ -46,7 +46,7 @@
         </div>
         <div class="board-footer">
           <div class="legend"><span class="legend-cell on"></span> Life</div>
-          <div class="size-readout"><span id="gridReadout">48 × 30</span><span class="sep">·</span><span>drag to paint</span></div>
+          <div class="size-readout"><span id="gridReadout">48 × 30</span><span class="sep">·</span><span>drag to paint · right-drag erases</span></div>
         </div>
       </div>
 
@@ -62,30 +62,30 @@
         </div>
 
         <div class="control-block presets-block">
-          <div class="section-head"><span>PATTERN PRESETS</span><span class="sparkle">✦</span></div>
+          <div class="section-head"><span>PATTERN PRESETS</span></div>
           <div class="preset-list" id="presetList">
-            <button class="preset" data-pattern="glider"><span class="pattern-icon glider-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/><rect x="2.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Glider</b><small>Small &amp; steady</small></span><span class="arrow">↗</span></button>
-            <button class="preset" data-pattern="gun"><span class="pattern-icon gun-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="0.1" width="0.8" height="0.8"/></svg></span><span><b>Gosper gun</b><small>Infinite movement</small></span><span class="arrow">↗</span></button>
-            <button class="preset" data-pattern="pulsar"><span class="pattern-icon pulsar-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Pulsar</b><small>Period-3 beacon</small></span><span class="arrow">↗</span></button>
-            <button class="preset" data-pattern="lwss"><span class="pattern-icon lwss-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/></svg></span><span><b>Spaceship</b><small>Traveling ship</small></span><span class="arrow">↗</span></button>
+            <button class="preset" data-pattern="glider"><span class="pattern-icon glider-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/><rect x="2.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Glider</b><small>Small &amp; steady</small></span></button>
+            <button class="preset" data-pattern="gun"><span class="pattern-icon gun-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="0.1" width="0.8" height="0.8"/></svg></span><span><b>Gosper gun</b><small>Infinite movement</small></span></button>
+            <button class="preset" data-pattern="pulsar"><span class="pattern-icon pulsar-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Pulsar</b><small>Period-3 beacon</small></span></button>
+            <button class="preset" data-pattern="lwss"><span class="pattern-icon lwss-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/></svg></span><span><b>Spaceship</b><small>Traveling ship</small></span></button>
             <div class="preset-more"><div class="preset-more-inner">
-            <button class="preset extra" data-pattern="penta"><span class="pattern-icon penta-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Pentadecathlon</b><small>Period-15 pulse</small></span><span class="arrow">↗</span></button>
-            <button class="preset extra" data-pattern="rpentomino"><span class="pattern-icon rpentomino-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="2.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>R-pentomino</b><small>Evolves for ages</small></span><span class="arrow">↗</span></button>
-            <button class="preset extra" data-pattern="acorn"><span class="pattern-icon acorn-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="2.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Acorn</b><small>Grows for 5206 gens</small></span><span class="arrow">↗</span></button>
-            <button class="preset extra" data-pattern="diehard"><span class="pattern-icon diehard-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="0.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><circle cx="2.2" cy="2.2" r="0.4"/></svg></span><span><b>Diehard</b><small>Dies at generation 130</small></span><span class="arrow">↗</span></button>
+            <button class="preset extra" data-pattern="penta"><span class="pattern-icon penta-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Pentadecathlon</b><small>Period-15 pulse</small></span></button>
+            <button class="preset extra" data-pattern="rpentomino"><span class="pattern-icon rpentomino-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="2.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>R-pentomino</b><small>Evolves for ages</small></span></button>
+            <button class="preset extra" data-pattern="acorn"><span class="pattern-icon acorn-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="1.1" y="0.1" width="0.8" height="0.8"/><rect x="0.1" y="1.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><rect x="2.1" y="1.1" width="0.8" height="0.8"/><rect x="0.1" y="2.1" width="0.8" height="0.8"/><rect x="2.1" y="2.1" width="0.8" height="0.8"/></svg></span><span><b>Acorn</b><small>Grows for 5206 gens</small></span></button>
+            <button class="preset extra" data-pattern="diehard"><span class="pattern-icon diehard-pattern" aria-hidden="true"><svg viewBox="0 0 3 3" focusable="false"><rect x="0.1" y="0.1" width="0.8" height="0.8"/><rect x="1.1" y="1.1" width="0.8" height="0.8"/><circle cx="2.2" cy="2.2" r="0.4"/></svg></span><span><b>Diehard</b><small>Dies at generation 130</small></span></button>
             </div></div>
             <button class="more-presets" id="morePresets" type="button" aria-expanded="false" aria-controls="presetList"><span class="label">More presets</span><span class="chev" aria-hidden="true">▾</span></button>
           </div>
         </div>
 
         <div class="control-block stats-block">
-          <div class="section-head"><span>LIVE STATS</span><span class="pulse-line">⌁</span></div>
+          <div class="section-head"><span>LIVE STATS</span></div>
           <div class="stats-grid"><div><small>GENERATION</small><strong id="generation">00000</strong></div><div><small>POPULATION</small><strong id="population">0000</strong></div></div>
-          <div class="population-chart" aria-label="Population over generations"><span>POPULATION / GENERATION</span><canvas id="populationChart"></canvas></div>
+          <div class="population-chart" aria-label="Population over generations"><canvas id="populationChart"></canvas></div>
         </div>
 
         <div class="control-block appearance-block">
-          <div class="section-head"><span>APPEARANCE</span><span class="sparkle">◐</span></div>
+          <div class="section-head"><span>APPEARANCE</span></div>
           <div class="theme-options" role="group" aria-label="Color theme">
             <button class="theme-btn active" data-theme="dark">Dark</button>
             <button class="theme-btn" data-theme="light">Light</button>
@@ -97,12 +97,11 @@
         <button class="settings-desktop-trigger control-block" id="settingsDesktopTrigger" type="button" aria-label="Open settings" aria-controls="settingsPanel" aria-expanded="false">
           <span class="settings-button-icon" aria-hidden="true">⚙</span>
           <span class="settings-button-copy"><b>SETTINGS</b><small>World and startup options</small></span>
-          <span class="settings-button-arrow" aria-hidden="true">↗</span>
         </button>
 
       </aside>
     </section>
-    <footer class="page-footer"><span>RULES: BIRTH 3 · SURVIVAL 2—3</span><span>BUILT FOR CURIOSITY <b>♥</b></span></footer>
+    <footer class="page-footer"><span>RULES: BIRTH 3 · SURVIVAL 2—3</span><span>BUILT FOR CURIOSITY <b>★</b></span></footer>
   </main>
 
   <section class="settings-panel control-block" id="settingsPanel" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Settings">
