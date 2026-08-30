@@ -732,12 +732,52 @@ input[type="range"] {
   fill: var(--cyan);
 }
 
-.random-pattern svg circle {
+.pulsar-pattern svg rect,
+.penta-pattern svg rect {
+  fill: var(--cell-alive);
+}
+
+.lwss-pattern svg rect,
+.rpentomino-pattern svg rect {
   fill: var(--cyan);
 }
 
-.blank-pattern svg rect {
-  fill: var(--pattern-dot);
+/* "More presets" expander — only visible where the settings control is the
+   gear icon (i.e. outside the landscape gate). Landscape CSS re-shows every
+   preset and hides this button. */
+.more-presets {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 7px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 11px var(--sans);
+  cursor: pointer;
+}
+
+.more-presets:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.more-presets .chev {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.preset-list.open .more-presets .chev {
+  transform: rotate(180deg);
+}
+
+/* Collapsed (default): only the first four presets show. */
+.preset-list:not(.open) .preset.extra {
+  display: none;
 }
 
 .stats-block {
@@ -1198,11 +1238,43 @@ input[type="range"] {
   color: var(--text);
 }
 
+.color-field {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
 .color-controls {
   display: flex;
   min-width: 0;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.color-swatches {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.color-swatch:hover {
+  border-color: var(--line-strong);
+}
+
+.color-swatch.active {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
 }
 
 .settings-field input[type="color"] {
@@ -1365,6 +1437,11 @@ input[type="range"] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
+  }
+
+  .more-presets {
+    grid-column: 1 / -1;
+    min-height: 30px;
   }
 }
 
@@ -1560,11 +1637,20 @@ input[type="range"] {
     padding-bottom: clamp(3px, 0.9vh, 8px);
   }
 
-  /* Presets always render as a stable 2x2 palette beside the board. */
+  /* Presets render as a stable palette beside the board — all six of them,
+     since the rail is the primary surface in landscape. */
   .preset-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(2px, 0.6vh, 3px);
+  }
+
+  .preset-list:not(.open) .preset.extra {
+    display: flex;
+  }
+
+  .more-presets {
+    display: none;
   }
 
   .preset {

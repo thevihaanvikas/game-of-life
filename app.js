@@ -23,6 +23,21 @@ const settingsBackdrop = document.getElementById('settingsBackdrop');
 const settingsClose = document.getElementById('settingsClose');
 const mainColorInput = document.getElementById('mainColor');
 const mainColorResetBtn = document.getElementById('mainColorReset');
+const presetList = document.getElementById('presetList');
+const morePresetsBtn = document.getElementById('morePresets');
+const colorSwatchButtons = document.querySelectorAll('.color-swatch');
+
+// Reduced-motion users get no canvas animations: no birth tint settling, no
+// birth/death ripples. The query object is live, so toggling the OS setting
+// applies immediately. (CSS already covers transitions and the modal pop.)
+const reducedMotionQuery =
+  typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : null;
+
+function prefersReducedMotion() {
+  return Boolean(reducedMotionQuery && reducedMotionQuery.matches);
+}
 
 let cols = 48;
 let rows = 30;
@@ -125,7 +140,7 @@ function scheduleSettleAnimation() {
   // Redraw on animation frames until every birth tint has settled. Painted
   // cells and evolution births are already covered by the effects loop;
   // bulk loads (presets, random fields) schedule this directly.
-  if (settleFrame) return;
+  if (prefersReducedMotion() || settleFrame) return;
   const tick = () => {
     settleFrame = 0;
     draw();
@@ -155,6 +170,24 @@ let customMainColor = null;
 
 const patterns = {
   glider: ['010', '001', '111'],
+  pulsar: [
+    '0011100011100',
+    '0000000000000',
+    '1000010100001',
+    '1000010100001',
+    '1000010100001',
+    '0011100011100',
+    '0000000000000',
+    '0011100011100',
+    '1000010100001',
+    '1000010100001',
+    '1000010100001',
+    '0000000000000',
+    '0011100011100',
+  ],
+  lwss: ['01001', '10000', '10001', '11110'],
+  penta: ['0010000100', '1101111011', '0010000100'],
+  rpentomino: ['011', '110', '010'],
   gun: [
     '000000000000000000000000000000100000',
     '000000000000000000000000000010100000',
@@ -307,7 +340,7 @@ function setSize() {
 }
 
 function scheduleEffects() {
-  if (!effects.length || effectFrame) return;
+  if (prefersReducedMotion() || !effects.length || effectFrame) return;
   effectFrame = requestAnimationFrame(animateEffects);
 }
 
@@ -406,7 +439,9 @@ function draw(now = performance.now()) {
         // Painting effect: freshly-born cells start in a lighter/darker
         // shade of the alive colour and settle into it over a moment of
         // wall-clock time — even while the simulation is paused.
-        const settle = (now - bornAt[y][x]) / BIRTH_SETTLE_MS;
+        const settle = prefersReducedMotion()
+          ? 1
+          : (now - bornAt[y][x]) / BIRTH_SETTLE_MS;
         if (settle < 1) {
           const eased = 1 - (1 - settle) * (1 - settle); // ease-out
           ctx.fillStyle =
@@ -418,6 +453,8 @@ function draw(now = performance.now()) {
       }
     }
   }
+
+  if (prefersReducedMotion()) return;
 
   effects.forEach((effect) => {
     const progress = Math.min(1, (now - effect.time) / 420);
@@ -490,6 +527,7 @@ function updateManualHistory() {
 }
 
 function addEffect(x, y, type, time = performance.now()) {
+  if (prefersReducedMotion()) return;
   effects.push({ x, y, type, time });
   if (effects.length > 2400) effects.splice(0, effects.length - 2400);
 }
@@ -598,6 +636,14 @@ function loadPattern(name) {
     place(patterns.glider, Math.floor(cols / 2) - 1, Math.floor(rows / 2) - 1, stamp);
   } else if (name === 'gun') {
     place(patterns.gun, 2, Math.floor(rows / 2) - 4, stamp);
+  } else if (name === 'pulsar') {
+    place(patterns.pulsar, Math.floor(cols / 2) - 6, Math.floor(rows / 2) - 6, stamp);
+  } else if (name === 'lwss') {
+    place(patterns.lwss, Math.floor(cols / 2) - 2, Math.floor(rows / 2) - 2, stamp);
+  } else if (name === 'penta') {
+    place(patterns.penta, Math.floor(cols / 2) - 5, Math.floor(rows / 2) - 1, stamp);
+  } else if (name === 'rpentomino') {
+    place(patterns.rpentomino, Math.floor(cols / 2) - 1, Math.floor(rows / 2) - 1, stamp);
   } else if (name === 'random') {
     for (let y = 0; y < rows; y += 1) {
       for (let x = 0; x < cols; x += 1) {
@@ -701,6 +747,12 @@ speedRange.addEventListener('input', () => {
 
 document.querySelectorAll('.preset').forEach((button) => {
   button.addEventListener('click', () => loadPattern(button.dataset.pattern));
+});
+
+morePresetsBtn?.addEventListener('click', () => {
+  const open = presetList.classList.toggle('open');
+  morePresetsBtn.setAttribute('aria-expanded', String(open));
+  morePresetsBtn.querySelector('.label').textContent = open ? 'Fewer presets' : 'More presets';
 });
 
 function setSettingsOpen(open, opener = null) {
@@ -817,6 +869,7 @@ function applyMainColor(color, { persist = true } = {}) {
   if (mainColorInput) {
     mainColorInput.value = customMainColor || defaultAliveByTheme[currentTheme()];
   }
+  syncColorSwatches();
   updateFavicon();
   draw();
 }
@@ -848,6 +901,19 @@ mainColorInput?.addEventListener('input', (event) => {
 
 mainColorResetBtn?.addEventListener('click', () => {
   applyMainColor(null);
+});
+
+function syncColorSwatches() {
+  colorSwatchButtons.forEach((button) => {
+    const active = Boolean(customMainColor)
+      && button.dataset.color.toLowerCase() === customMainColor.toLowerCase();
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+colorSwatchButtons.forEach((button) => {
+  button.addEventListener('click', () => applyMainColor(button.dataset.color));
 });
 
 document.getElementById('trailToggle').addEventListener('change', (event) => {

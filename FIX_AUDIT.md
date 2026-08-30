@@ -1,3 +1,30 @@
+# More presets, swatches, reduced motion v12
+
+- **Preset library expanded to six** (even count, 2-per-row friendly):
+  Glider, Gosper gun, **Pulsar** (period-3), **Spaceship/LWSS**,
+  **Pentadecathlon** (period-15), **R-pentomino** (methuselah). Blank
+  canvas and Random field were removed from the list — the ⌫ toolbar
+  button, the Randomize button, and the C / R shortcuts still do the
+  same jobs. Verified: exact cell counts (5/36/48/9/12/5), pulsar
+  period 48→56→72→48, LWSS intact after 4 generations in wrap mode.
+- **Responsive preset list**: in landscape (where the Settings control is
+  a button) all six presets show in the two-column palette. Everywhere
+  else (the settings gear mode) only the first four show, with a
+  "More presets" expander that reveals the rest and becomes "Fewer
+  presets"; the chevron rotates and `aria-expanded` tracks state.
+- **Curated colour swatches** in Settings — six one-click colours
+  (green, cyan, amber, orange, magenta, white) beside the picker; the
+  active swatch gets a ring and `aria-pressed`, and picker/reset input
+  stays in sync with swatch state.
+- **prefers-reduced-motion respected in the canvas**: reduced-motion
+  users get no birth tint settling (cells render the final colour
+  instantly) and no birth/death ripples; the animation loops are not
+  even scheduled. The media query is read live, so toggling the OS
+  setting takes effect immediately. CSS transitions/modal pop were
+  already covered.
+
+---
+
 # Tint strength tuning v11
 
 The birth tint's lean toward the theme extreme is now **per theme**:
