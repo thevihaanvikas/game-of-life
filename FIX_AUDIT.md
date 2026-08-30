@@ -1,3 +1,31 @@
+# Custom colour re-themes every accent v15
+
+A custom main colour previously re-themed only the green elements
+(--lime/--cell-alive): the cyan half of the preset icons (Gosper gun,
+Spaceship, R-pentomino, Diehard), the population graph, the Randomize
+button, trails and focus accents all stayed cyan. Now picking a colour
+re-themes **every accent**:
+
+- `--cyan` is overridden inline on `<body>`, so everything reading it
+  follows automatically: preset icons, focus outlines, the trail-mode
+  toggle, the speed readout, the Settings gear icon, select hovers.
+- `--chart` is overridden the same way (the canvas needs a literal
+  hex, not a `color-mix()` token stream), and `drawChart()` runs on
+  every colour change.
+- The canvas accent (trail afterimages, death ripples) follows via the
+  theme colour map, for both themes.
+- The Randomize button's border/wash are no longer hardcoded per
+  theme: `--random-border: var(--cyan)` and
+  `--random-bg: color-mix(in srgb, var(--cyan) 12%, var(--bg))` are
+  declared **on body** (the element carrying the inline override —
+  var() inside custom properties substitutes at the declaring element,
+  so a :root-level derivation would have frozen the theme default).
+  The wash stays theme-aware across theme switches.
+- Defaults are unchanged: no custom colour means the original
+  green + cyan scheme, including the chart.
+
+---
+
 # Landscape preset visibility + rail height v14
 
 - **Extra presets were invisible in landscape**: the collapsed-state

@@ -166,6 +166,9 @@ const faviconByTheme = {
 // colour and the favicon for BOTH themes, and survives reloads.
 const MAIN_COLOR_KEY = 'game-of-life:main-color';
 const defaultAliveByTheme = { dark: '#00ff00', light: '#00b300' };
+// The secondary accent (canvas trails, death ripples) follows a custom main
+// colour too, so the whole site re-themes — not just the green elements.
+const defaultAccentByTheme = { dark: '#00ffff', light: '#16718a' };
 let customMainColor = null;
 
 const patterns = {
@@ -861,16 +864,27 @@ function applyMainColor(color, { persist = true } = {}) {
 
   const bodyStyle = document.body.style;
   if (color) {
+    // A custom main colour re-themes EVERY accent, not just the primary:
+    // --cyan covers the preset icons, focus rings, toggle, speed readout
+    // and Settings icon; --chart recolours the population graph (the
+    // canvas needs a literal hex — it cannot resolve color-mix());
+    // --random-* (Randomize button) derives from --cyan in the CSS.
     bodyStyle.setProperty('--lime', color);
     bodyStyle.setProperty('--cell-alive', color);
+    bodyStyle.setProperty('--cyan', color);
+    bodyStyle.setProperty('--chart', color);
     bodyStyle.setProperty('--accent-ink', inkForColor(color));
   } else {
     bodyStyle.removeProperty('--lime');
     bodyStyle.removeProperty('--cell-alive');
+    bodyStyle.removeProperty('--cyan');
+    bodyStyle.removeProperty('--chart');
     bodyStyle.removeProperty('--accent-ink');
   }
   themeColors.dark.alive = customMainColor || defaultAliveByTheme.dark;
   themeColors.light.alive = customMainColor || defaultAliveByTheme.light;
+  themeColors.dark.accent = customMainColor || defaultAccentByTheme.dark;
+  themeColors.light.accent = customMainColor || defaultAccentByTheme.light;
 
   if (mainColorInput) {
     mainColorInput.value = customMainColor || defaultAliveByTheme[currentTheme()];
@@ -878,6 +892,7 @@ function applyMainColor(color, { persist = true } = {}) {
   syncColorSwatches();
   updateFavicon();
   draw();
+  drawChart();
 }
 
 function applyTheme(theme) {

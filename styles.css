@@ -63,8 +63,6 @@
   --pattern-dot: #ffffff;
   --chart: #00ffff;
   --heart: #ff7ca5;
-  --random-bg: #001d1d;
-  --random-border: #00ffff;
   --accent-glow: transparent;
 
   --block-shadow: none;
@@ -105,13 +103,20 @@ body[data-theme="light"] {
   --pattern-dot: #000000;
   --chart: #16718a;
   --heart: #d81b60;
-  --random-bg: #e2f0f4;
-  --random-border: #16718a;
   --accent-glow: transparent;
 
   --block-shadow: none;
   --shadow: none;
   --modal-backdrop: rgba(0, 0, 0, 0.45);
+}
+
+/* Randomize-button accents derive from the secondary accent ON <BODY>:
+   the Settings colour picker overrides --cyan there, so the button's
+   border and wash follow a custom main colour automatically, and the wash
+   stays theme-aware (var(--bg)) when the theme flips. */
+body {
+  --random-border: var(--cyan);
+  --random-bg: color-mix(in srgb, var(--cyan) 12%, var(--bg));
 }
 
 /* Keep the overscroll area in sync with the theme (progressive
