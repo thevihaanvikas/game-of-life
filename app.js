@@ -317,7 +317,9 @@ function draw(now = performance.now()) {
       if (value) {
         const age = Math.min(1, ages[y][x] / 18);
         ctx.fillStyle = alive;
-        ctx.globalAlpha = 0.52 + age * 0.48;
+        // Fresh cells sit at 82% opacity so they read as clearly alive from
+        // the first generation; surviving cells still brighten to full.
+        ctx.globalAlpha = 0.82 + age * 0.18;
         ctx.fillRect(xPosition, yPosition, cellDrawSize, cellDrawSize);
         ctx.globalAlpha = 1;
       }

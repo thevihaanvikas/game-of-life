@@ -1581,9 +1581,28 @@ input[type="range"] {
     font-size: clamp(8px, 1.1vh, 11px);
   }
 
+  /* Randomize and Settings sit side by side in row 4 of the rail: identical
+     box dimensions — one shared height clamp, zero vertical padding (both
+     center their content), the same horizontal padding and radius. The old
+     min-height + vertical padding let the Settings button grow taller than
+     the fixed-height Randomize button at most viewport heights. */
+  .randomize-btn,
   .settings-desktop-trigger {
-    min-height: clamp(24px, 3.8vh, 36px);
-    padding: clamp(4px, 1vh, 8px) clamp(6px, 0.8vw, 10px);
+    height: clamp(24px, 3.8vh, 36px);
+    /* min-height: 0 cancels the trigger's base 44px, which would otherwise
+       beat the fixed height and keep the pair mismatched. */
+    min-height: 0;
+    padding: 0 clamp(6px, 0.8vw, 10px);
+  }
+
+  /* Matching icon sizes so the pair reads as one set. */
+  .randomize-btn span {
+    font-size: 16px;
+    vertical-align: -2px;
+  }
+
+  .settings-button-icon {
+    font-size: 16px;
   }
 
   .settings-button-copy small {

@@ -1,3 +1,22 @@
+# Contrast & button-pair polish v7
+
+- **Cell contrast**: freshly-born cells used to render at 52% opacity,
+  which read as dim on both themes. The floor is now 82%, so every live
+  cell is clearly alive from its first generation; long survivors still
+  brighten to full opacity (the age cue is preserved, just compressed).
+- **Randomize / Settings pair**: in the landscape rail the two buttons
+  share row 4 but sized themselves differently — Randomize had a *fixed*
+  `height: clamp(24px, 3.8vh, 36px)` while Settings had `min-height`
+  with the same clamp *plus* vertical padding, so Settings grew taller
+  at most viewport heights (and their horizontal paddings differed:
+  4px vs 6–10px). Both now share one rule: the same height clamp,
+  `min-height: 0` (cancelling the trigger's base 44px), zero vertical
+  padding, identical horizontal padding, and matched 16px icons — equal
+  boxes at every viewport height, on top of the equal grid columns and
+  the shared 11px radius they already had.
+
+---
+
 # Layout & rendering fix v6
 
 ## What changed in v6
